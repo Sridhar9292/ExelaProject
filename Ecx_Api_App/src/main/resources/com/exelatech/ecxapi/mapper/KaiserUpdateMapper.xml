@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.KaiserUpdateMapper'>
+   
+    <resultMap type='com.exelatech.ecxapi.model.KaiserPrintRecord' id='printRecord'>
+    	<id property='rowNo' column='ROWNUM'/>
+   	    <result property='job' column='RITS_JOB_NUMBER'/>
+   	    <result property='id' column='KAISER_TICKET_PAPER_INFO_ID'/>
+   	    <result property='shipName' column='PURCHASER_NAME'/>
+   	    <result property='shipAttention' column='SHIP_ATTENTION'/>
+		 <result property='printTypeCode' column='PRINT_TYPE_CODE'/>
+   	    <result property='contract' column='CONTRACT'/>
+   	      <result property='contractCopies' column='Contract_Copies'/>
+   	    <result property='status' column='RECORD_STATUS'/>
+   	    <result property='shipDate' column='PRINT_MAIL_DATE'/>
+
+   	    <result property='completionDate' column='COMPLETION_DATE'/>
+    </resultMap>
+    
+    
+    <select id="getAll" resultMap="printRecord">
+		SELECT ROWNUM, ECX.KAISER_TICKET_PAPER_INFO_ID, ECX.RITS_JOB_NUMBER,ECX.PURCHASER_NAME,
+		CASE WHEN ECX.FIRST_NAME IS NULL AND ECX.MI IS not NULL AND ECX.LAST_NAME IS NOT NULL THEN ECX.MI||' '||ECX.LAST_NAME
+		WHEN ECX.FIRST_NAME IS NOT NULL AND ECX.MI IS  NULL AND ECX.LAST_NAME IS NOT NULL THEN FIRST_NAME||' '||ECX.LAST_NAME
+		WHEN ECX.FIRST_NAME IS NOT NULL AND ECX.MI IS NOT NULL AND ECX.LAST_NAME IS NOT NULL THEN ECX.FIRST_NAME||' '||ECX.MI||' '||ECX.LAST_NAME
+		ELSE ECX.NAME  END AS SHIP_ATTENTION, ECX.PURCHASER_ID||'-'||ECX.CONTRACT_ID||'-'||ECX.VERSION_NUMBER AS CONTRACT,RECIPIENT_COPIES as Contract_Copies ,
+		ECX.PRINT_TYPE_CODE,ECX.RECORD_STATUS,to_char(ECX.PRINT_MAIL_DATE,'yyyy-mm-dd') as PRINT_MAIL_DATE, ECX.COMPLETION_DATE FROM ECX.KAISER_TICKET_PAPER_INFO ECX
+        
+    </select>  
+    
+    <select id="search" resultMap="printRecord">
+        SELECT ROWNUM,ECX.KAISER_TICKET_PAPER_INFO_ID,ECX.RITS_JOB_NUMBER,ECX.PURCHASER_NAME,CASE WHEN ECX.FIRST_NAME IS NULL AND ECX.MI IS not NULL AND ECX.LAST_NAME IS NOT NULL THEN ECX.MI||' '||ECX.LAST_NAME
+		WHEN ECX.FIRST_NAME IS NOT NULL AND ECX.MI IS  NULL AND ECX.LAST_NAME IS NOT NULL THEN FIRST_NAME||' '||ECX.LAST_NAME
+		WHEN ECX.FIRST_NAME IS NOT NULL AND ECX.MI IS NOT NULL AND ECX.LAST_NAME IS NOT NULL THEN ECX.FIRST_NAME||' '||ECX.MI||' '||ECX.LAST_NAME
+		ELSE ECX.NAME END AS SHIP_ATTENTION, ECX.PURCHASER_ID||'-'||ECX.CONTRACT_ID||'-'||ECX.VERSION_NUMBER AS CONTRACT,RECIPIENT_COPIES as Contract_Copies ,  
+        ECX.PRINT_TYPE_CODE,ECX.RECORD_STATUS,  to_char(ECX.PRINT_MAIL_DATE,'yyyy-mm-dd') as PRINT_MAIL_DATE , ECX.COMPLETION_DATE  FROM ECX.KAISER_TICKET_PAPER_INFO ECX WHERE ECX.RITS_JOB_NUMBER = #{searchTerm}
+    </select>  
+    
+    <select id="searchByColumnValue" resultMap="printRecord">
+         SELECT ROWNUM,KAISER_TICKET_PAPER_INFO_ID,RITS_JOB_NUMBER,PURCHASER_NAME,CASE WHEN ECX.FIRST_NAME IS NULL AND ECX.MI IS not NULL AND ECX.LAST_NAME IS NOT NULL THEN ECX.MI||' '||ECX.LAST_NAME
+		WHEN ECX.FIRST_NAME IS NOT NULL AND ECX.MI IS  NULL AND ECX.LAST_NAME IS NOT NULL THEN FIRST_NAME||' '||ECX.LAST_NAME
+		WHEN ECX.FIRST_NAME IS NOT NULL AND ECX.MI IS NOT NULL AND ECX.LAST_NAME IS NOT NULL THEN ECX.FIRST_NAME||' '||ECX.MI||' '||ECX.LAST_NAME
+		ELSE ECX.NAME END AS SHIP_ATTENTION, PURCHASER_ID||'-'||CONTRACT_ID||'-'||VERSION_NUMBER AS CONTRACT,  RECIPIENT_COPIES as Contract_Copies ,
+        ECX.PRINT_TYPE_CODE,RECORD_STATUS, to_char(ECX.PRINT_MAIL_DATE,'yyyy-mm-dd') as PRINT_MAIL_DATE , COMPLETION_DATE  FROM ECX.KAISER_TICKET_PAPER_INFO  ECX
+        <if test="column=='PURCHASER_ID'"> WHERE PURCHASER_ID like  #{value} AND RITS_JOB_NUMBER =#{job}</if>
+	<if test="column=='CONTRACT_ID'"> WHERE CONTRACT_ID like #{value} AND RITS_JOB_NUMBER =#{job}</if>
+        <if test="column=='VERSION_NUMBER'"> WHERE VERSION_NUMBER like  #{value} AND RITS_JOB_NUMBER =#{job}</if> 
+	<if test="column=='NAME'"> WHERE (upper(FIRST_NAME)||' '||upper(MI)||upper(LAST_NAME) LIKE upper(#{value}) OR (upper(PURCHASER_NAME) LIKE upper(#{value}))) AND RITS_JOB_NUMBER =#{job}</if> 
+	 
+    </select>  
+    
+        <select id="searchByContract" resultMap="printRecord">
+      SELECT ROWNUM,KAISER_TICKET_PAPER_INFO_ID,RITS_JOB_NUMBER,PURCHASER_NAME,CASE WHEN ECX.FIRST_NAME IS NULL AND ECX.MI IS not NULL AND ECX.LAST_NAME IS NOT NULL THEN ECX.MI||' '||ECX.LAST_NAME
+		WHEN ECX.FIRST_NAME IS NOT NULL AND ECX.MI IS  NULL AND ECX.LAST_NAME IS NOT NULL THEN FIRST_NAME||' '||ECX.LAST_NAME
+		WHEN ECX.FIRST_NAME IS NOT NULL AND ECX.MI IS NOT NULL AND ECX.LAST_NAME IS NOT NULL THEN ECX.FIRST_NAME||' '||ECX.MI||' '||ECX.LAST_NAME
+		ELSE ECX.NAME END AS SHIP_ATTENTION, PURCHASER_ID||'-'||CONTRACT_ID||'-'||VERSION_NUMBER AS CONTRACT,  RECIPIENT_COPIES as Contract_Copies ,
+        ECX.PRINT_TYPE_CODE,RECORD_STATUS, to_char(ECX.PRINT_MAIL_DATE,'yyyy-mm-dd') as PRINT_MAIL_DATE , COMPLETION_DATE  FROM ECX.KAISER_TICKET_PAPER_INFO  ECX
+        WHERE (substr(#{value}, 1,9) in PURCHASER_ID) AND (substr(#{value}, 11,3) in CONTRACT_ID) AND (substr(#{value}, 15,3) in VERSION_NUMBER)  AND RITS_JOB_NUMBER =#{job}
+      </select>
+    
+      <update id="update" parameterType="com.exelatech.ecxapi.model.KaiserPrintRecord">
+
+             UPDATE
+            ECX.KAISER_TICKET_PAPER_INFO ECX
+            SET ECX.RECORD_STATUS = #{status} , ECX.PRINT_MAIL_DATE = to_date(#{shipDate},'yyyy-mm-dd')
+            WHERE ECX.KAISER_TICKET_PAPER_INFO_ID = #{id} AND ECX.RITS_JOB_NUMBER=#{job}
+        
+    </update>
+    
+    <update id="updateOn">
+             UPDATE
+            ECX.KAISER_TICKET_PAPER_INFO ECX
+            SET  ECX.PRINT_MAIL_DATE =to_date(#{shipDate},'yyyy-mm-dd'),ECX.RECORD_STATUS = #{status} WHERE ECX.KAISER_TICKET_PAPER_INFO_ID = #{id} AND ECX.RITS_JOB_NUMBER=#{jobNumber}
+    </update>
+    
+   
+</mapper>

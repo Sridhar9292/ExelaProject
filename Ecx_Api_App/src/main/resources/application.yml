@@ -1,0 +1,123 @@
+spring:
+  profiles.active: qa
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: admin
+    password: admin
+    event-topic : VirtualTopic.ecx.events 
+        
+  jms:
+    listener:
+      acknowledge-mode: dups-ok
+server:
+  servlet:
+    context-path: /api
+  port: 8101
+  error:
+    include-message property: always
+    include-stacktrace: never
+elastic:
+  url: localhost:9200
+  moveit-alias: dps-moveit
+  farmingdale-alias: farmingdale
+
+# Sendgrid
+apikey.suppression: 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  
+
+#ReturnDashboard Vender list
+vendors: aci,fis,fiserv,opc,rpps,wu
+
+# LDAP
+ldap:
+  urls: ldap://10.112.4.61:389
+  base.dn: CN=try-svc-ecx,OU=Non-Interactive,OU=Users,OU=Service Accounts,OU=Miscellaneous,DC=exelaonline,DC=com
+  user:
+    search: OU=Sites,DC=exelaonline,DC=com
+    dn.pattern: (sAMAccountName={0})
+    customUserSearchBase: OU=Sites,DC=exelaonline,DC=com
+  password: q4hZ!Z!r
+
+# CORS
+cors: 
+  allowed-origins: http://localhost:4200, http://localhost:8080, http://localhost, https://ecx.exelaonline.com, https://ecxuat.exelaonline.com, https://ecxqa.exelaonline.com, https://ecxdev.exelaonline.com
+  allowed-methods: GET, PUT, POST, DELETE, OPTIONS
+  allowed-headers: Origin, Content-Type, Accept, Authorization
+  exposed-headers: Authorization, Link, X-Total-Count
+  max-age: 1800
+
+# JWT
+jwt:
+  # This token must be encoded using Base64 and be at least 256 bits long (you can type `openssl rand -base64 64` on your command line to generate a 512 bits one)
+  base64-secret: MWZiMDRiZmI3ODI5Y2VhNWZjYWQ1MTA0NDcxN2I2OWNjYWZjYWM5OGJmY2I2NDAwNTJhNGNmMjIxMmZkYzBjMGI3ODkxN2IxYzAwOGFjNDc3NTJiMDBlMjBjYjk1YTU2NjUxMjMxZGUxZDFhNDQyNTZhZjQxODAyZWIxNGExZTc=
+  # Token is valid 5 hours
+  token-validity-in-seconds: 18000
+  token-validity-in-seconds-for-remember-me: 2592000  
+
+# ReportPath
+reportPath:
+  monthlySLA: /data/ecx/data/datafeed/acg/report/request
+  invalidMessage: /data/ecx/data/datafeed/acg/report/invalidmessage
+  summary: /data/ecx/datafeed/email/.archive
+  prefix : qa
+# Swagger
+springdoc.swagger-ui.path: /index.html
+
+# OpenAPI
+openapi:
+  app.name: @project.description@
+  app.version: @project.version@
+  app.timestamp: @timestamp@
+  app.description: 
+    This is API documentation for ECX and was last updated on <b>@timestamp@</b><br><br>
+    To test API's using OpenAPI, you need to first call <a href="#">/api/authenticate</a> using your AD credentials to get JWT authorization token.<br>
+    Then click on <b>Authorize</b> button / Unlock icon to update the JWT token and based on your permissions, you will be able to call respective API's.
+---
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:oracle:thin:@db-ecxdev.exelaonline.com:1521/ecxdev
+    driver: oracle.jdbc.driver.OracleDriver
+    username: ecx
+    password: ecx2developer
+    hikari:
+      maximum-pool-size: 10
+prefix: test
+context: dev
+     
+---
+spring:
+  profiles: qa
+  datasource:
+    url: jdbc:oracle:thin:@db-ecxqa1.exelaonline.com:1521/ecxqa1
+    driver: oracle.jdbc.driver.OracleDriver
+    username: ECX_APP
+    password: Ecxappq1
+    hikari:
+      maximum-pool-size: 10
+prefix: test
+context: qa
+
+---
+spring:
+  profiles: uat
+  datasource:
+    url: jdbc:oracle:thin:@db-ecxuat.exelaonline.com:1521/ecxuat
+    driver: oracle.jdbc.driver.OracleDriver
+    username: ECX_APP
+    password: ecxuat4app
+    hikari:
+      maximum-pool-size: 10
+prefix: test
+context: uat
+---
+spring:
+  profiles: prod
+  datasource:
+    url: jdbc:oracle:thin:@db-ecxprod.exelaonline.com:1521/ecxprod
+    driver: oracle.jdbc.driver.OracleDriver
+    username: ECX_APP
+    password: ecappx
+    hikari:
+      maximum-pool-size: 10
+prefix: test
+context: prod

@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.EmailTemplateMapper'>
+	<cache/>
+	<resultMap type='com.exelatech.ecxapi.model.EmailTemplate' id='EmailTemplateResult'>
+		<id property='templateId' column='TEMPLATE_ID'/>
+		<result property='templateName' column='TEMPLATE_NAME' />
+		<result property='eventName' column='EVENT_NAME' />
+		<result property='emailFrom' column='EMAIL_FROM' />
+		<result property='emailTo' column='EMAIL_TO' />
+		<result property='emailCc' column='EMAIL_CC' />
+		<result property='emailBcc' column='EMAIL_BCC' />
+		<result property='emailSubject' column='EMAIL_SUBJECT' />
+		<result property='emailBody' column='EMAIL_BODY' />
+		<result property='fileAsBody' column='FILE_AS_BODY' />
+		<result property='enabled' column='ENABLED' javaType='boolean' typeHandler="org.apache.ibatis.type.BooleanTypeHandler"/>
+	</resultMap>
+
+	<select id="getAll" resultMap="EmailTemplateResult">
+		SELECT TEMPLATE_ID,
+		TEMPLATE_NAME,
+		EVENT_NAME,
+		EMAIL_FROM,
+		EMAIL_TO,
+		EMAIL_CC,
+		EMAIL_BCC,
+		EMAIL_SUBJECT,
+		EMAIL_BODY,
+		FILE_AS_BODY,
+		ENABLED
+		FROM ECX.EMAIL_TEMPLATE
+		ORDER BY TEMPLATE_ID
+	</select>
+
+	<select id="search" resultMap="EmailTemplateResult">
+		SELECT TEMPLATE_ID,
+		TEMPLATE_NAME,
+		EVENT_NAME,
+		EMAIL_FROM,
+		EMAIL_TO,
+		EMAIL_CC,
+		EMAIL_BCC,
+		EMAIL_SUBJECT,
+		EMAIL_BODY,
+		FILE_AS_BODY,
+		ENABLED
+		FROM ECX.EMAIL_TEMPLATE
+		WHERE (upper(TEMPLATE_ID) like upper(#{searchTerm})
+		or upper(TEMPLATE_NAME) like upper(#{searchTerm})
+		or upper(EMAIL_SUBJECT) like upper(#{searchTerm}))
+		ORDER BY TEMPLATE_ID
+	</select>
+
+
+	<select id="getEmailTemplateByEventName" resultMap="EmailTemplateResult">
+		SELECT
+		TEMPLATE_ID,
+		TEMPLATE_NAME,
+		EVENT_NAME,
+		EMAIL_FROM,
+		EMAIL_TO,
+		EMAIL_CC,
+		EMAIL_BCC,
+		EMAIL_SUBJECT,
+		EMAIL_BODY,
+		FILE_AS_BODY,
+		ENABLED
+		FROM
+		ECX.EMAIL_TEMPLATE
+		WHERE EVENT_NAME=#{eventName}
+		ORDER BY TEMPLATE_ID
+	</select>
+
+    <select id="getEnabledEmailTemplateByEventName" resultMap="EmailTemplateResult">
+        SELECT
+        TEMPLATE_ID,
+        TEMPLATE_NAME,
+        EVENT_NAME,
+        EMAIL_FROM,
+        EMAIL_TO,
+        EMAIL_CC,
+        EMAIL_BCC,
+        EMAIL_SUBJECT,
+        EMAIL_BODY,
+        FILE_AS_BODY,
+        ENABLED
+        FROM
+        ECX.EMAIL_TEMPLATE
+        WHERE EVENT_NAME=#{eventName}
+        AND ENABLED=1
+        ORDER BY TEMPLATE_ID
+    </select>
+
+	<select id="getEmailTemplateByTemplateId" resultMap="EmailTemplateResult">
+		SELECT TEMPLATE_ID,
+		TEMPLATE_NAME,
+		EVENT_NAME,
+		EMAIL_FROM,
+		EMAIL_TO,
+		EMAIL_CC,
+		EMAIL_BCC,
+		EMAIL_SUBJECT,
+		EMAIL_BODY,
+		FILE_AS_BODY,
+		ENABLED
+		FROM ECX.EMAIL_TEMPLATE
+		WHERE TEMPLATE_ID=#{templateId}		
+	</select>
+	<select id="get" resultMap="EmailTemplateResult">
+		SELECT TEMPLATE_ID,
+		TEMPLATE_NAME,
+		EVENT_NAME,
+		EMAIL_FROM,
+		EMAIL_TO,
+		EMAIL_CC,
+		EMAIL_BCC,
+		EMAIL_SUBJECT,
+		EMAIL_BODY,
+		FILE_AS_BODY,
+		ENABLED
+		FROM ECX.EMAIL_TEMPLATE
+		WHERE
+		TEMPLATE_ID=#{param1}
+	</select>
+
+	<insert id="insert" parameterType="com.exelatech.ecxapi.model.EmailTemplate">
+        INSERT
+        INTO ECX.EMAIL_TEMPLATE
+            (
+                TEMPLATE_ID,
+				TEMPLATE_NAME,
+				EVENT_NAME,
+				EMAIL_FROM,
+				EMAIL_TO,
+				EMAIL_CC,
+				EMAIL_BCC,
+				EMAIL_SUBJECT,
+				EMAIL_BODY,
+				FILE_AS_BODY,
+				ENABLED
+            )
+            VALUES
+            (
+                (SELECT MAX(TEMPLATE_ID)+1 FROM ECX.EMAIL_TEMPLATE),
+                #{templateName ,jdbcType=VARCHAR},
+                #{eventName ,jdbcType=VARCHAR},
+                #{emailFrom ,jdbcType=VARCHAR},
+                #{emailTo ,jdbcType=VARCHAR},
+                #{emailCc ,jdbcType=VARCHAR},
+                #{emailBcc ,jdbcType=VARCHAR},
+                #{emailSubject ,jdbcType=VARCHAR},
+                #{emailBody ,jdbcType=VARCHAR},
+                #{fileAsBody ,jdbcType=VARCHAR},
+                #{enabled ,jdbcType=VARCHAR}
+            )
+    </insert>
+
+    <delete id="remove" parameterType="com.exelatech.ecxapi.model.EmailTemplate">
+        DELETE FROM ECX.EMAIL_TEMPLATE
+        WHERE TEMPLATE_ID=#{templateId}
+    </delete>
+    
+    
+     <insert id="update" parameterType="com.exelatech.ecxapi.model.EmailTemplate">
+        UPDATE ECX.EMAIL_TEMPLATE
+        SET
+          		TEMPLATE_ID=#{templateId ,jdbcType=VARCHAR},
+				TEMPLATE_NAME=#{templateName ,jdbcType=VARCHAR},
+				EVENT_NAME=#{eventName ,jdbcType=VARCHAR},
+				EMAIL_FROM=#{emailFrom ,jdbcType=VARCHAR},
+				EMAIL_TO=#{emailTo ,jdbcType=VARCHAR},
+				EMAIL_CC=#{emailCc ,jdbcType=VARCHAR},
+				EMAIL_BCC=#{emailBcc ,jdbcType=VARCHAR},
+				EMAIL_SUBJECT=#{emailSubject ,jdbcType=VARCHAR},
+				EMAIL_BODY=#{emailBody ,jdbcType=VARCHAR},
+				FILE_AS_BODY=#{fileAsBody ,jdbcType=VARCHAR},
+				ENABLED=#{enabled ,jdbcType=VARCHAR}
+        WHERE
+            TEMPLATE_ID=#{templateId}
+    </insert>
+
+</mapper>

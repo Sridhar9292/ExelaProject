@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.EmailConfigMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.EmailConfig' id='EmailConfigResult'>
+       <!-- <id property='subaccountCode' column='SUBACCOUNT_CODE' /> -->
+	<result property='subaccountCode' column='SUBACCOUNT_CODE' />
+        <result property='subaccountName' column='SUBACCOUNT_NAME'/>
+        <!-- <result property='emailUsername' column='EMAIL_USERNAME'/> 
+	<result property='emailPassword' column='EMAIL_PASSWORD'/> 
+	<result property='emailApiKey' column='EMAIL_API_KEY'/> -->
+        <result property='xheader1Name' column='XHEADER1_NAME'/>
+        <result property='xheader1Value' column='XHEADER1_VALUE'/>
+        <result property='xheader2Name' column='XHEADER2_NAME'/>
+        <result property='xheader2Value' column='XHEADER2_VALUE'/>
+        <result property='xheader3Name' column='XHEADER3_NAME'/>
+        <result property='xheader3Value' column='XHEADER3_VALUE'/>
+        <result property='xheader4Name' column='XHEADER4_NAME'/>
+        <result property='xheader4Value' column='XHEADER4_VALUE'/>
+        <result property='xheader5Name' column='XHEADER5_NAME'/>
+        <result property='xheader5Value' column='XHEADER5_VALUE'/>
+        <result property='entryDate' column='ENTRY_DATE'/>
+        <result property='modifyDate' column='MODIFY_DATE'/>
+        <result property='userAbbrev' column='USER_ABBREV'/>
+        <result property='subaccountUser' column='SUBACCOUNT_USER'/>
+        <result property='clientCode' column='CLIENT_CODE'/>
+        <result property='clientLobCode' column='CLIENT_LOB_CODE'/>
+        <result property='count' column='count'/>
+	
+	<collection property="categoryList" ofType="com.exelatech.ecxapi.model.Category" resultMap="CategoryResult" />
+    </resultMap>
+
+    <resultMap type='com.exelatech.ecxapi.model.Category' id='CategoryResult'>
+		<id property='emailConfigCatId' column='EMAIL_CONFIG_CATEGORY_ID' />
+		<result property='categoryName' column='CATEGORY_NAME' />
+		<result property='userAbbr' column='USER_ABBREV' />
+		<result property='emailCategoryId' column='EMAIL_CATEGORY_ID' />   
+		<result property='subaccountCode' column='SUBACCOUNT_CODE' />
+		<result property='selected' column='SELECTED' /> 
+		<result property='categoryValue' column="EMAIL_CATEGORY_VALUE" />
+		<result property='dynamicMail' column="EMAIL_DYNAMIC" />
+		<result property='selectedDynamicMail' column="SELECTED_DYNAMIC_EMAIL" />
+	</resultMap>
+ <insert id="insertCategoriesForSubaccount" parameterType="java.util.List"   flushCache="true"  >  
+	   INSERT ALL 
+        <foreach collection="categoryList" item="category"   index="index">
+             INTO ECX.ECX_EMAIL_CONFIG_CATEGORY (EMAIL_CONFIG_CATEGORY_ID, SUBACCOUNT_CODE, EMAIL_CATEGORY_ID,EMAIL_CATEGORY_VALUE, EMAIL_DYNAMIC)  VALUES  
+             (extractvalue(dbms_xmlgen.getxmltype('select ECX.SUBACCOUNT_SEQUENCE.NEXTVAL - 1 from dual'),'//text()'), #{subaccountCode}, #{category.emailCategoryId},#{category.categoryValue},#{category.dynamicMail} ) 
+        </foreach>
+ 		 SELECT 1 from DUAL
+     </insert>
+      
+	<delete id="deleteCategoriesForSubaccount"  parameterType="com.exelatech.ecxapi.model.EmailConfig">
+		DELETE FROM ECX.ECX_EMAIL_CONFIG_CATEGORY WHERE SUBACCOUNT_CODE=#{subaccountCode}
+	</delete>
+     
+	<select id="getAllCategory" resultMap="CategoryResult">
+		SELECT CATEGORY_NAME, USER_ABBREV,EMAIL_CATEGORY_ID FROM ECX.ECX_EMAIL_CATEGORY ORDER BY EMAIL_CATEGORY_ID ASC
+	</select>
+
+	<select id="getSubAccountCategories" resultMap="CategoryResult">
+	SELECT EMAIL_CATEGORY_ID, CATEGORY_NAME, SELECTED, CATEGORY_NAME, EMAIL_CATEGORY_VALUE, SELECTED_DYNAMIC_EMAIL, EMAIL_DYNAMIC FROM
+  	(SELECT EECC.EMAIL_CATEGORY_ID, 1 AS SELECTED, EEC.CATEGORY_NAME, EECC.EMAIL_CATEGORY_VALUE, EECC.EMAIL_DYNAMIC as SELECTED_DYNAMIC_EMAIL, EECC.EMAIL_DYNAMIC 
+  	FROM ECX.ECX_EMAIL_CONFIG_CATEGORY EECC, ECX.ECX_EMAIL_CATEGORY EEC
+  	WHERE EECC.EMAIL_CATEGORY_ID = EEC.EMAIL_CATEGORY_ID
+  	AND EECC.SUBACCOUNT_CODE = #{subaccountCode}
+  	UNION ALL
+  	SELECT EEC.EMAIL_CATEGORY_ID, 0 AS SELECTED, EEC.CATEGORY_NAME, NULL AS EMAIL_CATEGORY_VALUE, 0 as SELECTED_DYNAMIC_EMAIL, 0 AS EMAIL_DYNAMIC
+  	FROM ECX.ECX_EMAIL_CATEGORY EEC
+  	WHERE EEC.EMAIL_CATEGORY_ID NOT IN (SELECT EECC.EMAIL_CATEGORY_ID FROM ECX.ECX_EMAIL_CONFIG_CATEGORY EECC
+  	WHERE EECC.SUBACCOUNT_CODE = #{subaccountCode}))
+  	ORDER BY EMAIL_CATEGORY_ID ASC
+  	
+  	
+	<!-- SELECT EMAIL_CATEGORY_ID, CATEGORY_NAME, SELECTED, CATEGORY_NAME, EMAIL_CATEGORY_VALUE FROM
+  	(SELECT EECC.EMAIL_CATEGORY_ID, 1 AS SELECTED, EEC.CATEGORY_NAME, EECC.EMAIL_CATEGORY_VALUE
+  	FROM ECX.ECX_EMAIL_CONFIG_CATEGORY EECC, ECX.ECX_EMAIL_CATEGORY EEC
+  	WHERE EECC.EMAIL_CATEGORY_ID = EEC.EMAIL_CATEGORY_ID
+  	AND EECC.SUBACCOUNT_CODE = #{subaccountCode}
+  	UNION ALL
+  	SELECT EEC.EMAIL_CATEGORY_ID, 0 AS SELECTED, EEC.CATEGORY_NAME, NULL AS EMAIL_CATEGORY_VALUE
+  	FROM ECX.ECX_EMAIL_CATEGORY EEC
+  	WHERE EEC.EMAIL_CATEGORY_ID NOT IN (SELECT EECC.EMAIL_CATEGORY_ID FROM ECX.ECX_EMAIL_CONFIG_CATEGORY EECC
+  	WHERE EECC.SUBACCOUNT_CODE = #{subaccountCode}))
+  	ORDER BY EMAIL_CATEGORY_ID ASC -->
+	
+	<!-- SELECT EECC.EMAIL_CATEGORY_ID, EECC.EMAIL_CATEGORY_ID AS SELECTED, EEC.CATEGORY_NAME, EECC.EMAIL_CATEGORY_VALUE FROM ECX.ECX_EMAIL_CONFIG_CATEGORY EECC, ECX.ECX_EMAIL_CATEGORY EEC WHERE
+		EECC.EMAIL_CATEGORY_ID = EEC.EMAIL_CATEGORY_ID AND EECC.SUBACCOUNT_CODE = #{subaccountCode} ORDER BY EMAIL_CATEGORY_ID ASC -->
+	</select>
+
+    <select id="search" resultMap="EmailConfigResult">
+        SELECT eec.*
+        FROM ECX.ecx_email_config eec
+        WHERE upper(eec.SUBACCOUNT_CODE) LIKE upper(#{searchTerm})
+        OR upper(eec.SUBACCOUNT_NAME) LIKE upper(#{searchTerm})
+        OR upper(eec.SUBACCOUNT_USER) LIKE upper(#{searchTerm})
+        OR upper(eec.CLIENT_CODE) LIKE upper(#{searchTerm})
+        OR upper(eec.CLIENT_LOB_CODE) LIKE upper(#{searchTerm})
+        ORDER BY eec.SUBACCOUNT_CODE
+    </select>
+
+   <!--    <select id="get" resultMap="EmailConfigResult">
+        SELECT eec.*
+        FROM ECX.ecx_email_config eec
+        WHERE eec.SUBACCOUNT_CODE = #{subaccountCode}
+        ORDER BY eec.SUBACCOUNT_CODE
+    </select>  -->
+
+<select id="get" resultMap="EmailConfigResult">
+select eec.SUBACCOUNT_CODE,eec.SUBACCOUNT_NAME,eec.XHEADER1_NAME,
+		eec.XHEADER1_VALUE,eec.XHEADER2_NAME,eec.XHEADER2_VALUE,eec.XHEADER3_NAME,
+		eec.XHEADER3_VALUE,eec.XHEADER4_NAME,eec.XHEADER4_VALUE,
+		eec.XHEADER5_NAME,eec.XHEADER5_VALUE,eec.ENTRY_DATE,
+		eec.MODIFY_DATE,eec.USER_ABBREV,eec.SUBACCOUNT_USER,
+		eec.CLIENT_CODE,eec.CLIENT_LOB_CODE,email_cat.CATEGORY_NAME,
+		email_cat.USER_ABBREV,		email_cat.EMAIL_CATEGORY_ID,
+		cat.SUBACCOUNT_CODE,cat.EMAIL_CATEGORY_VALUE,
+		cat.EMAIL_DYNAMIC,cat.EMAIL_DYNAMIC as SELECTED_DYNAMIC_EMAIL, decode(email_cat.EMAIL_CATEGORY_ID,null,0,1) as SELECTED	
+ FROM ECX.ecx_email_config eec
+        left join ecx.ECX_EMAIL_CONFIG_CATEGORY cat
+        on (eec.SUBACCOUNT_CODE =cat.SUBACCOUNT_CODE)
+        left join  ecx.ECX_EMAIL_CATEGORY email_cat 
+        on (cat.EMAIL_CATEGORY_ID = email_cat.EMAIL_CATEGORY_ID)
+WHERE eec.SUBACCOUNT_CODE = #{subaccountCode}
+        ORDER BY eec.SUBACCOUNT_CODE
+</select> 
+ <!--  <select id="getAll" resultMap="EmailConfigResult">
+       SELECT eec.*
+        FROM ECX.ecx_email_config eec
+        ORDER BY eec.SUBACCOUNT_CODE 
+    </select> -->
+
+
+  <select id="getAll" resultMap="EmailConfigResult">
+         
+select eec.SUBACCOUNT_CODE,eec.SUBACCOUNT_NAME,eec.XHEADER1_NAME,
+		eec.XHEADER1_VALUE,eec.XHEADER2_NAME,eec.XHEADER2_VALUE,eec.XHEADER3_NAME,
+		eec.XHEADER3_VALUE,eec.XHEADER4_NAME,eec.XHEADER4_VALUE,
+		eec.XHEADER5_NAME,eec.XHEADER5_VALUE,eec.ENTRY_DATE,
+		eec.MODIFY_DATE,eec.USER_ABBREV,eec.SUBACCOUNT_USER,
+		eec.CLIENT_CODE,eec.CLIENT_LOB_CODE,email_cat.CATEGORY_NAME,
+		email_cat.USER_ABBREV,		email_cat.EMAIL_CATEGORY_ID,
+		cat.SUBACCOUNT_CODE,cat.EMAIL_CATEGORY_VALUE,cat.EMAIL_DYNAMIC,	
+		cat.EMAIL_DYNAMIC,cat.EMAIL_DYNAMIC as SELECTED_DYNAMIC_EMAIL, decode(email_cat.EMAIL_CATEGORY_ID,null,0,1) as SELECTED	
+ FROM ECX.ecx_email_config eec
+        left join ecx.ECX_EMAIL_CONFIG_CATEGORY cat
+        on (eec.SUBACCOUNT_CODE =cat.SUBACCOUNT_CODE)
+        left join  ecx.ECX_EMAIL_CATEGORY email_cat 
+        on (cat.EMAIL_CATEGORY_ID = email_cat.EMAIL_CATEGORY_ID)
+        ORDER BY eec.SUBACCOUNT_CODE
+    </select>
+
+    <select id="exists" resultMap="EmailConfigResult">
+        SELECT count(1) as count
+        from ECX.ecx_email_config
+        WHERE SUBACCOUNT_CODE = #{subaccountCode}
+    </select>
+
+    <insert id="insert" parameterType="com.exelatech.ecxapi.model.EmailConfig">
+        INSERT
+        INTO ECX.ECX_EMAIL_CONFIG
+            (
+                SUBACCOUNT_CODE,
+                SUBACCOUNT_NAME,
+                <!-- EMAIL_USERNAME, EMAIL_PASSWORD, EMAIL_API_KEY, -->
+                XHEADER1_NAME,
+                XHEADER1_VALUE,
+                XHEADER2_NAME,
+                XHEADER2_VALUE,
+                XHEADER3_NAME,
+                XHEADER3_VALUE,
+                XHEADER4_NAME,
+                XHEADER4_VALUE, 
+                SUBACCOUNT_USER,
+                CLIENT_CODE,
+                CLIENT_LOB_CODE
+            )
+            VALUES
+            (
+                #{subaccountCode ,jdbcType=VARCHAR},
+                #{subaccountName ,jdbcType=VARCHAR},
+               	<!-- #{emailUsername}, #{emailPassword}, #{emailApiKey}, -->
+                #{xheader1Name ,jdbcType=VARCHAR},
+                #{xheader1Value ,jdbcType=VARCHAR},
+                #{xheader2Name ,jdbcType=VARCHAR},
+                #{xheader2Value ,jdbcType=VARCHAR},
+                #{xheader3Name ,jdbcType=VARCHAR},
+                #{xheader3Value ,jdbcType=VARCHAR},
+                #{xheader4Name ,jdbcType=VARCHAR},
+                #{xheader4Value ,jdbcType=VARCHAR}, 
+                #{subaccountUser ,jdbcType=VARCHAR},
+                #{clientCode ,jdbcType=VARCHAR},
+                #{clientLobCode ,jdbcType=VARCHAR}
+            )
+    </insert>
+
+    <insert id="update" parameterType="com.exelatech.ecxapi.model.EmailConfig">
+        UPDATE ECX.ECX_EMAIL_CONFIG
+        SET
+            SUBACCOUNT_NAME=#{subaccountName ,jdbcType=VARCHAR},
+            <!--EMAIL_USERNAME=#{emailUsername}, EMAIL_PASSWORD=#{emailPassword}, EMAIL_API_KEY=#{emailApiKey}, -->
+            XHEADER1_NAME=#{xheader1Name ,jdbcType=VARCHAR},
+            XHEADER1_VALUE=#{xheader1Value ,jdbcType=VARCHAR},
+            XHEADER2_NAME=#{xheader2Name ,jdbcType=VARCHAR},
+            XHEADER2_VALUE=#{xheader2Value ,jdbcType=VARCHAR},
+            XHEADER3_NAME=#{xheader3Name ,jdbcType=VARCHAR},
+            XHEADER3_VALUE=#{xheader3Value ,jdbcType=VARCHAR},
+            XHEADER4_NAME=#{xheader4Name ,jdbcType=VARCHAR},
+            XHEADER4_VALUE=#{xheader4Value ,jdbcType=VARCHAR},
+            SUBACCOUNT_USER=#{subaccountUser ,jdbcType=VARCHAR},
+            CLIENT_CODE=#{clientCode ,jdbcType=VARCHAR},
+            CLIENT_LOB_CODE=#{clientLobCode ,jdbcType=VARCHAR}
+        WHERE
+            SUBACCOUNT_CODE=#{subaccountCode}
+    </insert>
+
+    <delete id="remove" parameterType="com.exelatech.ecxapi.model.EmailConfig">
+        DELETE FROM ECX.ECX_EMAIL_CONFIG
+        WHERE SUBACCOUNT_CODE=#{subaccountCode}
+    </delete>
+    
+     <insert id="reportInsert" >
+        INSERT
+        INTO ECX.ECX_EMAIL_REPORT_CONFIG
+        (
+        SUBACCOUNT_CODE,
+        EMAIL_REPORT_TYPE,
+        EMAIL_REPORT_NAMING_PATTERN,
+        EMAIL_REPORT_PATH,
+        GENERATE_REPORT_IF_EMPTY,
+        EXPORT_ENABLED
+        )
+        VALUES
+        (
+        #{param1 ,jdbcType=VARCHAR},
+        #{param2 ,jdbcType=VARCHAR},
+       #{param3 ,jdbcType=VARCHAR},
+        #{param4 ,jdbcType=VARCHAR},
+       #{param5 ,jdbcType=VARCHAR},
+       #{param6 ,jdbcType=VARCHAR}
+        )
+    </insert>
+    
+     <delete id="deleteBySubaccountCode" parameterType="String" >
+        DELETE FROM ECX.ECX_EMAIL_REPORT_CONFIG
+        WHERE SUBACCOUNT_CODE=#{subaccountCode}
+    </delete>
+</mapper>

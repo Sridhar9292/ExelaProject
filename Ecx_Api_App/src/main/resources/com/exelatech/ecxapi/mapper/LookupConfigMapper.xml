@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.LookupConfigMapper'>
+	<resultMap type='com.exelatech.ecxapi.model.Lookups'
+		id='LookupResult'>
+		<result property='type' column='TYPE' />
+		<result property='subType' column='SUB_TYPE' />
+		<result property='name' column='NAME' />
+		<result property='value' column='VALUE' />
+		<result property='description' column='DESCRIPTION' />
+		<result property='active' column='ACTIVE' />
+		<result property='entryDate' column='ENTRY_DATE' />
+		<result property='modifyDate' column='MODIFY_DATE' />
+		<result property='userAbbr' column='USER_ABBR' />
+		<result property='defaultValue' column='DEFAULT_VALUE' />
+	</resultMap>
+
+	<insert id="insert" parameterType="com.exelatech.ecxapi.model.Lookups">
+        INSERT
+        INTO ECX.ECX_LOOKUP_TABLE
+            (
+                TYPE,
+                SUB_TYPE,
+                NAME,
+                VALUE,
+                DESCRIPTION,
+                ACTIVE,
+                USER_ABBR,
+                DEFAULT_VALUE
+            )
+            VALUES
+            (
+                #{type},
+                #{subType},
+                #{name},
+                #{value},
+                #{description ,jdbcType=VARCHAR},
+                #{active ,jdbcType=VARCHAR},
+                #{userAbbr ,jdbcType=VARCHAR},
+                #{defaultValue ,jdbcType=VARCHAR}
+            )
+    </insert>
+    
+     <insert id="update" parameterType="com.exelatech.ecxapi.model.Lookups">
+        UPDATE ECX.ECX_LOOKUP_TABLE
+        SET
+            TYPE=#{type},
+            SUB_TYPE=#{subType},
+            NAME=#{name},
+            VALUE=#{value},
+            DESCRIPTION=#{description ,jdbcType=VARCHAR},
+            ACTIVE=#{active ,jdbcType=VARCHAR},
+            USER_ABBR=#{userAbbr ,jdbcType=VARCHAR},
+            DEFAULT_VALUE=#{defaultValue ,jdbcType=VARCHAR}
+        WHERE
+            TYPE=#{type}
+    </insert>
+    
+    
+     <insert id="updateUsingSubType" parameterType="com.exelatech.ecxapi.model.Lookups">
+        UPDATE ECX.ECX_LOOKUP_TABLE
+        SET    
+           
+            VALUE=#{value},
+            DESCRIPTION=#{description ,jdbcType=VARCHAR},
+            ACTIVE=#{active ,jdbcType=VARCHAR},
+            USER_ABBR=#{userAbbr ,jdbcType=VARCHAR},
+            DEFAULT_VALUE=#{defaultValue ,jdbcType=VARCHAR}
+        WHERE
+            TYPE=#{type}
+            and SUB_TYPE=#{subType}
+            and  NAME=#{name}
+    </insert>
+    
+    
+     <delete id="remove" parameterType="com.exelatech.ecxapi.model.Lookups">
+        DELETE FROM ECX.ECX_LOOKUP_TABLE
+        WHERE TYPE=#{type}
+    </delete>
+      <delete id="deleteUsingSubType" parameterType="com.exelatech.ecxapi.model.Lookups">
+        DELETE FROM ECX.ECX_LOOKUP_TABLE
+     WHERE TYPE=#{param1}
+         and  SUB_TYPE=#{param2}
+          and  NAME=#{param3}
+    </delete>
+    <select id="getAll" resultMap="LookupResult">
+		SELECT * FROM ECX.ECX_LOOKUP_TABLE
+	</select>
+	
+	<select id="getAllLookupsByType" resultMap="LookupResult">
+		SELECT * FROM ECX.ECX_LOOKUP_TABLE where 
+		TRIM(TYPE)=#{value} or TYPE =#{value}
+	</select>
+    	<select id="getValue" resultMap="LookupResult">
+		SELECT * FROM ECX.ECX_LOOKUP_TABLE  
+		 WHERE TYPE=#{param1}
+         and  SUB_TYPE=#{param2}
+          and  NAME=#{param3}
+	</select>
+	<select id="getUserRegisterLookups" resultMap="LookupResult">
+		SELECT NAME,VALUE FROM ECX.ECX_LOOKUP_TABLE where 
+		 TYPE='USER'
+         and  SUB_TYPE='ROLE'
+	</select>
+</mapper>

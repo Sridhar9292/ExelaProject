@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.SuppressionListMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.SuppressionList' id='SuppressionListResult'>
+    	<id property='subAccount' column='SUBACCOUNT_CODE'/>
+   	    <result property='emailAddress' column='EMAILADDRESS'/>
+        <result property='reportType' column='REPORT_TYPE'/>
+        <result property='reason' column='REASON'/>
+         <result property='job_number' column='JOB_NUMBER'/>
+         <result property='removed' column='REMOVED'/>
+    </resultMap>  
+       
+     <select id="getSuppressDetails" resultMap="SuppressionListResult">
+        SELECT  EE.SUBACCOUNT_CODE AS SUBACCOUNT_CODE, EESR.EMAIL_ADDRESS AS EMAILADDRESS, UPPER(EESR.REPORT_TYPE) AS REPORT_TYPE,
+        EESR.REASON AS REASON,EE.JOB_NUMBER as JOB_NUMBER, NVL2(UA.EMAILADDRESS,'TRUE','FALSE') AS REMOVED FROM ECX.ECX_EMAIL EE
+		INNER JOIN ECX.DATAFEED DF ON EE.FEED_DOC_ID = DF.FEED_DOC_ID
+		INNER JOIN ECX.ECX_EMAIL_SENDGRID_REPORT EESR ON
+		EE.EMAIL_UUID=EESR.EMAIL_UUID 
+		LEFT OUTER JOIN ECX.ECX_EMAIL_UNSUPPRESS_AUDIT UA ON EE.JOB_NUMBER = UA.SUBACCOUNT_CODE 
+    	AND  EESR.EMAIL_ADDRESS = UA.EMAILADDRESS 
+		Where UPPER(EESR.REPORT_TYPE) in ('DROPPED', 'SPAMREPORT', 'UNSUBSCRIBE') and EE.JOB_NUMBER = #{param1}
+    </select> 
+    
+    <select id="getCustomSearch" resultMap="SuppressionListResult">
+        SELECT * FROM (SELECT  EE.SUBACCOUNT_CODE AS SUBACCOUNT_CODE, EESR.EMAIL_ADDRESS AS EMAILADDRESS, UPPER(EESR.REPORT_TYPE) AS REPORT_TYPE,
+        EESR.REASON AS REASON,EE.JOB_NUMBER as JOB_NUMBER, NVL2(UA.EMAILADDRESS,'TRUE','FALSE')  AS REMOVED FROM ECX.ECX_EMAIL EE
+		INNER JOIN ECX.DATAFEED DF ON EE.FEED_DOC_ID = DF.FEED_DOC_ID
+		INNER JOIN ECX.ECX_EMAIL_SENDGRID_REPORT EESR ON
+		EE.EMAIL_UUID=EESR.EMAIL_UUID Where UPPER(EESR.REPORT_TYPE) in ('DROPPED', 'SPAMREPORT', 'UNSUBSCRIBE') and EE.JOB_NUMBER = #{param1}) a 
+    	LEFT OUTER JOIN ECX.ECX_EMAIL_UNSUPPRESS_AUDIT UA ON EE.JOB_NUMBER = UA.SUBACCOUNT_CODE 
+        AND  EESR.EMAIL_ADDRESS = UA.EMAILADDRESS 
+    	WHERE (upper(SUBACCOUNT_CODE) LIKE upper(#{param2}) 
+        OR upper(EMAILADDRESS) LIKE upper(#{param2})
+        OR upper(REPORT_TYPE) LIKE upper(#{param2}))
+    </select>  
+    
+     <select id="getSuppressReason"  resultType="String">
+        Select REASON from ( SELECT  EESR.REASON 
+ 		FROM ECX.ECX_EMAIL_SENDGRID_REPORT EESR WHERE 
+  		EESR.EMAIL_ADDRESS = #{param1}
+  		ORDER BY ENTRY_DATE DESC  ) where ROWNUM=1
+    </select>    
+</mapper>

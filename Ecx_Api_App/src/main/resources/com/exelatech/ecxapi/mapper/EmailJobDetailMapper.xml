@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.EmailJobDetailMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.EmailJobDetail' id='EmailJobDetailResult'>
+        <id property='emailUUID' column='EMAIL_UUID'/>
+        <result property='feedDocID' column='FEED_DOC_ID'/>
+        <result property='subaccountCode' column='SUBACCOUNT_CODE'/>
+        <result property='subaccountUniqueID' column='SUBACCOUNT_UNIQUE_ID'/>
+        <result property='emailCategory' column='EMAIL_CATEGORY'/>
+        <result property='jobNumber' column='JOB_NUMBER'/>
+        <result property='accoutNumber' column='ACCOUNT_NUMBER'/>
+        <result property='emailFrom' column='EMAIL_FROM'/>
+        <result property='emailTo' column='EMAIL_TO'/>
+        <result property='emailCc' column='EMAIL_CC'/>
+        <result property='emailBcc' column='EMAIL_BCC'/>
+        <result property='emailReplyTo' column='EMAIL_REPLY_TO'/>
+        <result property='emailSubject' column='EMAIL_SUBJECT'/>
+        <result property='emailStatus' column='EMAIL_STATUS'/>
+        <result property='emailSubmittedOn' column='EMAIL_SUBMITTED_ON'/>
+        <!-- <result property='emailSentOn' column='EMAIL_SENT_ON'/>
+        <result property='emailBlockedOn' column='EMAIL_BLOCKED_ON'/>
+        <result property='deliveredOn' column='DELIVERED_ON'/>
+        <result property='bouncedOn' column='BOUNCED_ON'/> -->
+        <result property='processedOn' column='PROCESSED_ON'/>
+        <result property='deliveredOn' column='DELIVERED_ON'/>
+        <result property='deferredOn' column='DEFERRED_ON'/>
+        <result property='openedOn' column='OPENED_ON'/>
+        <result property='bouncedOn' column='BOUNCED_ON'/>
+        <result property='droppedOn' column='DROPPED_ON'/>
+        <result property='deferredOn' column='DEFERRED_ON'/>
+        <result property='openedOn' column='OPENED_ON'/>
+        <result property='bouncedOn' column='BOUNCED_ON'/>
+        <result property='droppedOn' column='DROPPED_ON'/>
+        
+        <result property='lastOpenedOn' column='LAST_OPENED_ON'/>
+        <result property='entryDate' column='ENTRY_DATE'/>
+    </resultMap>
+
+    <select id="search" resultMap="EmailJobDetailResult">
+<!-- SELECT ee.EMAIL_UUID,
+        ee.FEED_DOC_ID,
+        ee.SUBACCOUNT_CODE,
+        ee.SUBACCOUNT_UNIQUE_ID,
+        ee.EMAIL_CATEGORY,
+        ee.JOB_NUMBER,
+        ee.ACCOUNT_NUMBER,
+        ee.CONTENT_TYPE,
+        ee.EMAIL_FROM,
+        ee.EMAIL_TO,
+        ee.EMAIL_CC,
+        ee.EMAIL_BCC,
+        ee.EMAIL_REPLY_TO,
+        ee.EMAIL_SUBJECT,
+        ee.EMAIL_STATUS,
+       	ee.EMAIL_SENT_ON AS EMAIL_SUBMITTED_ON,
+        eesr.REPORT_DATE AS EMAIL_SENT_ON,
+        eeber.REPORT_DATE AS EMAIL_BLOCKED_ON,      
+        EEDR.REPORT_DATE DELIVERED_ON,
+        eebr.report_date BOUNCED_ON,
+        OPENS_REPORT.OPEN_DATE LAST_OPENED_ON,
+        ee.ENTRY_DATE
+        FROM ECX.ECX_EMAIL ee, ECX.ECX_EMAIL_SENT_REPORT eesr,ECX.ECX_EMAIL_BLOCKED_REPORT eeber, ECX.ECX_EMAIL_DELIVERY_REPORT eedr, ECX.ECX_EMAIL_BOUNCE_REPORT eebr,  (select EEOR_sub.email_uuid, max(EEOR_sub.REPORT_DATE) as open_date
+        from ECX.ECX_EMAIL ee_sub, ECX.ECX_EMAIL_OPEN_REPORT eeor_sub
+        where ee_sub.email_uuid = eeor_sub.email_uuid
+        group by EEOR_sub.email_uuid
+        ) opens_report
+        where ee.email_uuid = eedr.email_uuid(+)
+        and ee.email_uuid = eesr.email_uuid(+)
+        and ee.email_uuid = eeber.email_uuid(+)
+        and ee.email_uuid = eebr.email_uuid(+)
+        and ee.email_uuid = opens_report.email_uuid(+)
+        and ee.feed_doc_id = #{feedDocID}
+        and (upper(EE.EMAIL_UUID) like upper(#{searchTerm}) or upper(ee.SUBACCOUNT_UNIQUE_ID) like upper(#{searchTerm}))
+        order by ee.SUBACCOUNT_UNIQUE_ID -->
+        
+  SELECT ee.EMAIL_UUID,
+  ee.FEED_DOC_ID,
+  ee.SUBACCOUNT_CODE,
+  ee.SUBACCOUNT_UNIQUE_ID,
+  ee.EMAIL_CATEGORY,
+  ee.JOB_NUMBER,
+  ee.ACCOUNT_NUMBER,
+  ee.CONTENT_TYPE,
+  ee.EMAIL_FROM,
+  ee.EMAIL_TO,
+  ee.EMAIL_CC,
+  ee.EMAIL_BCC,
+  ee.EMAIL_REPLY_TO,
+  ee.EMAIL_SUBJECT,
+  ee.EMAIL_STATUS,
+  ee.EMAIL_SENT_ON AS EMAIL_SUBMITTED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'PROCESSED',EESR.REPORT_DATE )) AS PROCESSED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'DELIVERED',EESR.REPORT_DATE )) AS DELIVERED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'DEFERRED',EESR.REPORT_DATE )) AS DEFERRED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'OPEN',EESR.REPORT_DATE )) AS OPENED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'BOUNCE',EESR.REPORT_DATE ))  AS BOUNCED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'DROPPED',EESR.REPORT_DATE,'SPAMREPORT',EESR.REPORT_DATE,'UNSUBSCRIBE',EESR.REPORT_DATE)) AS DROPPED_ON
+FROM ECX.ECX_EMAIL ee
+LEFT OUTER JOIN ECX.ECX_EMAIL_SENDGRID_REPORT EESR
+ON ee.email_uuid     =eesr.email_uuid
+WHERE ee.feed_doc_id = #{feedDocID}
+AND (upper(EE.EMAIL_UUID) LIKE upper(#{searchTerm})
+OR upper(ee.SUBACCOUNT_UNIQUE_ID) LIKE upper(#{searchTerm}))
+GROUP BY 
+ORDER BY ee.SUBACCOUNT_UNIQUE_ID
+
+    </select>
+
+    <select id="getJobDetails" resultMap="EmailJobDetailResult">
+<!-- SELECT ee.EMAIL_UUID,
+        ee.FEED_DOC_ID,
+        ee.SUBACCOUNT_CODE,
+        ee.SUBACCOUNT_UNIQUE_ID,
+        ee.EMAIL_CATEGORY,
+        ee.JOB_NUMBER,
+        ee.ACCOUNT_NUMBER,
+        ee.CONTENT_TYPE,
+        ee.EMAIL_FROM,
+        ee.EMAIL_TO,
+        ee.EMAIL_CC,
+        ee.EMAIL_BCC,
+        ee.EMAIL_REPLY_TO,
+        ee.EMAIL_SUBJECT,
+        ee.EMAIL_STATUS,
+        ee.EMAIL_SENT_ON AS EMAIL_SUBMITTED_ON,
+		eesr.REPORT_DATE AS EMAIL_SENT_ON,
+        eeber.REPORT_DATE AS EMAIL_BLOCKED_ON,
+        EEDR.REPORT_DATE DELIVERED_ON,
+        eebr.report_date BOUNCED_ON,
+        OPENS_REPORT.OPEN_DATE LAST_OPENED_ON,
+        ee.ENTRY_DATE
+        FROM ECX.ECX_EMAIL ee, ECX.ECX_EMAIL_SENT_REPORT eesr,ECX.ECX_EMAIL_BLOCKED_REPORT eeber, ECX.ECX_EMAIL_DELIVERY_REPORT eedr, ECX.ECX_EMAIL_BOUNCE_REPORT eebr,  (select EEOR_sub.email_uuid, max(EEOR_sub.REPORT_DATE) as open_date
+        from ECX.ECX_EMAIL ee_sub, ECX.ECX_EMAIL_OPEN_REPORT eeor_sub
+        where ee_sub.email_uuid = eeor_sub.email_uuid
+        group by EEOR_sub.email_uuid
+        ) opens_report
+        where ee.email_uuid = eedr.email_uuid(+)
+        and ee.email_uuid = eesr.email_uuid(+)
+        and ee.email_uuid = eeber.email_uuid(+)
+        and ee.email_uuid = eebr.email_uuid(+)
+        and ee.email_uuid = opens_report.email_uuid(+)
+        and ee.feed_doc_id = #{feedDocID}
+        order by ee.SUBACCOUNT_UNIQUE_ID -->
+        
+  SELECT ee.EMAIL_UUID,
+  ee.FEED_DOC_ID,
+  ee.SUBACCOUNT_CODE,
+  ee.SUBACCOUNT_UNIQUE_ID,
+  ee.EMAIL_CATEGORY,
+  ee.JOB_NUMBER,
+  ee.ACCOUNT_NUMBER,
+  ee.CONTENT_TYPE,
+  ee.EMAIL_FROM,
+  ee.EMAIL_TO,
+  ee.EMAIL_CC,
+  ee.EMAIL_BCC,
+  ee.EMAIL_REPLY_TO,
+  ee.EMAIL_SUBJECT,
+  ee.EMAIL_STATUS,
+  ee.EMAIL_SENT_ON AS EMAIL_SUBMITTED_ON,
+ MAX(DECODE(UPPER(EESR.REPORT_TYPE),'PROCESSED',EESR.REPORT_DATE )) AS PROCESSED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'DELIVERED',EESR.REPORT_DATE )) AS DELIVERED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'DEFERRED',EESR.REPORT_DATE )) AS DEFERRED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'OPEN',EESR.REPORT_DATE )) AS OPENED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'BOUNCE',EESR.REPORT_DATE ))  AS BOUNCED_ON,
+  MAX(DECODE(UPPER(EESR.REPORT_TYPE),'DROPPED',EESR.REPORT_DATE,'SPAMREPORT',EESR.REPORT_DATE,'UNSUBSCRIBE',EESR.REPORT_DATE)) AS DROPPED_ON
+  FROM ECX.ECX_EMAIL ee
+LEFT OUTER JOIN ECX.ECX_EMAIL_SENDGRID_REPORT EESR
+ON ee.email_uuid     =eesr.email_uuid
+WHERE ee.feed_doc_id = #{feedDocID}
+GROUP BY EE.EMAIL_UUID,
+  ee.FEED_DOC_ID,
+  ee.SUBACCOUNT_CODE,
+  ee.SUBACCOUNT_UNIQUE_ID,
+  ee.EMAIL_CATEGORY,
+  ee.JOB_NUMBER,
+  ee.ACCOUNT_NUMBER,
+  ee.CONTENT_TYPE,
+  ee.EMAIL_FROM,
+  ee.EMAIL_TO,
+  ee.EMAIL_CC,
+  ee.EMAIL_BCC,
+  ee.EMAIL_REPLY_TO,
+  ee.EMAIL_SUBJECT,
+  ee.EMAIL_STATUS,
+  ee.EMAIL_SENT_ON
+ORDER BY ee.SUBACCOUNT_UNIQUE_ID
+    </select>
+
+    <select id="exists" resultMap="EmailJobDetailResult">
+        SELECT count(1) as count
+        from ECX.ecx_email_config
+        WHERE SUBACCOUNT_CODE = #{subaccountCode}
+
+    </select>
+
+</mapper>

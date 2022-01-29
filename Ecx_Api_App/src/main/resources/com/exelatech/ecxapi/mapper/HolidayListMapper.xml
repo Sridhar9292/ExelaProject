@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.HolidayListMapper'>
+	<resultMap type='com.exelatech.ecxapi.model.HolidayList' id='HolidayListResult'>
+		<result property='holidayId' column='HOLIDAY_ID' />
+		<result property='holidayName' column='HOLIDAY_NAME' />
+		<result property='holidayDate' column='HOLIDAY_DATE' />
+		<result property='saturdayHolder' column='SATURDAY_NOT_OBSERVED' />
+		<result property='sundayHolder' column='SUNDAY_OBSERVED_ON_MONDAY' />
+	</resultMap>
+
+	<resultMap type='com.exelatech.ecxapi.model.HolidayList' id='HolidayListFetchResult'>
+		<result property='holidayIdList' column='HOLIDAY_ID' />
+		<result property='holidayName' column='HOLIDAY_NAME' />
+		<result property='holidayDate' column='HOLIDAY_DATE' />
+		<result property='saturdayFlag' column='SATURDAY_NOT_OBSERVED' />
+		<result property='sundayFlag' column='SUNDAY_OBSERVED_ON_MONDAY' />
+	</resultMap>
+
+	<resultMap type='com.exelatech.ecxapi.model.HolidayList' id='HolidayNameResult'>
+		<result property='holidayName' column='HOLIDAY_NAME' />
+		<result property='holidayIdList' column='HOLIDAY_ID' />
+	</resultMap>
+
+	<select id="checkExist" resultMap="HolidayNameResult">
+		select
+		holiday_id,holiday_name
+		from ECX.FEDERAL_HOLIDAY where
+		HOLIDAY_ID = #{param1 ,jdbcType=VARCHAR}
+		and
+		TO_CHAR(holiday_date,'DDMMYYYY') =#{param2 ,jdbcType=VARCHAR}
+
+	</select>
+	<select id="updateCheckExist" resultMap="HolidayNameResult">
+		select
+		holiday_id,holiday_name
+		from ECX.FEDERAL_HOLIDAY where
+		HOLIDAY_ID = #{param1 ,jdbcType=VARCHAR}
+		and
+		TO_CHAR(holiday_date,'DDMMYYYY') =#{param2 ,jdbcType=VARCHAR}
+	</select>
+
+
+	<select id="getAll" resultMap="HolidayListResult">
+		SELECT holiday_id,
+		holiday_name,
+		LISTAGG (TO_CHAR(HOLIDAY_DATE,'DDMMYYYY'), ',') WITHIN GROUP (
+		ORDER BY holiday_date)
+		HOLIDAY_DATE,
+		LISTAGG (SATURDAY_NOT_OBSERVED, ',') WITHIN GROUP (
+		ORDER
+		BY holiday_date)
+		SATURDAY_NOT_OBSERVED,
+		LISTAGG
+		(SUNDAY_OBSERVED_ON_MONDAY, ',') WITHIN GROUP (
+		ORDER BY
+		holiday_date)SUNDAY_OBSERVED_ON_MONDAY
+		FROM
+		ECX.FEDERAL_HOLIDAY
+		WHERE
+		TO_CHAR(holiday_date,'YYYY') BETWEEN
+		TO_CHAR(sysdate,'YYYY') AND
+		TO_CHAR(sysdate,'YYYY')+3
+		group by
+		HOLIDAY_ID,
+		HOLIDAY_NAME
+	</select> 
+	
+	
+
+<select id="get" resultMap="HolidayListResult">
+		SELECT holiday_id,
+		holiday_name,
+		LISTAGG (TO_CHAR(HOLIDAY_DATE,'DDMMYYYY'), ',') WITHIN GROUP (
+		ORDER BY holiday_date)
+		HOLIDAY_DATE,
+		LISTAGG (SATURDAY_NOT_OBSERVED, ',') WITHIN GROUP (
+		ORDER
+		BY holiday_date)
+		SATURDAY_NOT_OBSERVED,
+		LISTAGG
+		(SUNDAY_OBSERVED_ON_MONDAY, ',') WITHIN GROUP (
+		ORDER BY
+		holiday_date)SUNDAY_OBSERVED_ON_MONDAY
+		FROM
+		ECX.FEDERAL_HOLIDAY
+		WHERE
+	TO_CHAR(holiday_date,'DDMMYYYY') =#{param1 ,jdbcType=VARCHAR}
+		group by
+		HOLIDAY_ID,
+		HOLIDAY_NAME
+		
+		
+	</select>
+
+	<select id="getHolidayNames" resultMap="HolidayNameResult">
+		select
+		holiday_name,holiday_id from ECX.FEDERAL_HOLIDAY group by
+		holiday_name,holiday_id order by holiday_id
+	</select>
+
+	<insert id="insertHoliday" parameterType="com.exelatech.ecxapi.model.HolidayList">
+		insert into
+		ECX.FEDERAL_HOLIDAY
+		(HOLIDAY_ID,HOLIDAY_NAME,HOLIDAY_DATE,SATURDAY_NOT_OBSERVED,SUNDAY_OBSERVED_ON_MONDAY)
+		values(#{holidayId ,jdbcType=VARCHAR},#{holidayName ,jdbcType=VARCHAR},#{holidayDateFormat ,jdbcType=VARCHAR},#{saturdayFlag ,jdbcType=VARCHAR},#{sundayFlag ,jdbcType=VARCHAR})
+	</insert>  
+
+	<update id="updateHoliday" parameterType="com.exelatech.ecxapi.model.HolidayList">
+		UPDATE
+		ECX.FEDERAL_HOLIDAY SET
+		HOLIDAY_DATE = #{param1},
+		SATURDAY_NOT_OBSERVED= #{param3 ,jdbcType=VARCHAR}, SUNDAY_OBSERVED_ON_MONDAY =
+		#{param4 ,jdbcType=VARCHAR} WHERE HOLIDAY_DATE = #{param2} and HOLIDAY_ID=#{param5}
+	</update>
+
+	<delete id="deleteHoliday" parameterType="com.exelatech.ecxapi.model.HolidayList">
+		DELETE FROM
+		ECX.FEDERAL_HOLIDAY WHERE HOLIDAY_DATE=#{param1} and HOLIDAY_ID=#{param2}
+	</delete>
+
+	<select id="fetchHoliday" resultMap="HolidayListFetchResult">
+		SELECT
+		HOLIDAY_ID,HOLIDAY_NAME,to_char(holiday_date,'MM-dd-yyyy')
+		HOLIDAY_DATE,SATURDAY_NOT_OBSERVED,SUNDAY_OBSERVED_ON_MONDAY
+		FROM
+		ECX.FEDERAL_HOLIDAY WHERE HOLIDAY_DATE=#{param1} AND
+		HOLIDAY_ID=#{param2}
+	</select>
+
+</mapper>

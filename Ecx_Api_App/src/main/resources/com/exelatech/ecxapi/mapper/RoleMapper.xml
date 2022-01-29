@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.RoleMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.Role' id='RoleResult'>
+        <result property='rolename' column='ROLENAME'/>
+        <result property='description' column='DESCRIPTION'/>
+		<result property='count' column='count'/>
+        <collection property='permissions' ofType='com.exelatech.ecxapi.model.Permission' resultMap='PermissionResult' />
+    </resultMap>
+
+    <resultMap type='com.exelatech.ecxapi.model.Permission' id='PermissionResult'>
+        <result property='permissionName' column='PERMISSION_NAME'/>
+        <result property='description' column='PERMISSION_DESCRIPTION'/>
+        <result property='selected' column='SELECTED'/>
+    </resultMap>
+
+    <select id="getAll" resultMap="RoleResult">
+        select r.*, rp.permission_name from ECX.role r, ECX.role_permission rp where r.rolename = rp.role_name (+)
+    </select>
+
+    <select id="getAllRolesWithPermissions" resultMap="RoleResult">
+        select r.*, p.permission_name, p.description as PERMISSION_DESCRIPTION from ECX.role r, ECX.role_permission rp, ECX.permission p where r.rolename = rp.role_name (+) and rp.permission_name = p.permission_name (+)
+    </select>
+
+    <select id="getAllDistinct" resultMap="RoleResult">
+        select distinct r.* from ECX.role r
+    </select>
+
+    <select id="search" resultMap="RoleResult">
+        select r.*,rp.permission_name from ECX.role r, ECX.role_permission rp where r.rolename = rp.role_name (+) and (upper(r.rolename) like upper(#{searchTerm}) or upper(r.description) like upper(#{searchTerm}))
+    </select>
+
+    <select id="get" resultMap="RoleResult">
+        select r.*, p.permission_name, p.description as PERMISSION_DESCRIPTION from ECX.role r, ECX.role_permission rp, ECX.permission p where r.rolename = rp.role_name (+) and rp.permission_name = p.permission_name (+) and r.rolename = #{rolename}
+    </select>
+
+    <select id="exists" resultMap="RoleResult">
+        select count(1) as count from ECX.role r where r.rolename = #{rolename}
+    </select>
+
+    <insert id="insert" parameterType="com.exelatech.ecxapi.model.Role">
+        insert into ECX.ROLE (rolename, description) values (#{rolename}, #{description})
+    </insert>
+
+    <update id="update" parameterType="com.exelatech.ecxapi.model.Role">
+        update ECX.ROLE set description = #{description} where rolename = #{rolename}
+    </update>
+
+    <delete id="remove" parameterType="com.exelatech.ecxapi.model.Role">
+        delete from ECX.role where rolename = #{rolename}
+    </delete>
+
+    <delete id="deletePermissionsForRole" parameterType="com.exelatech.ecxapi.model.Role">
+        delete from ECX.role_permission where role_name = #{rolename}
+    </delete>
+    
+    <delete id="deleteRolesForUser"  >
+        DELETE FROM ECX.user_role where ROLENAME=#{param1}
+    </delete>
+    
+    <insert id="insertPermissionsForRole" parameterType="com.exelatech.ecxapi.model.Role">
+        INSERT ALL
+        <foreach collection="permissions" item="permission" index="index" >
+            into ECX.role_permission (role_name, permission_name) values (#{rolename}, #{permission.permissionName})
+        </foreach>
+        SELECT 1 from DUAL
+    </insert>
+
+    <select id="getAllPermissionsWithSelectionForRole" resultMap="PermissionResult">
+        select p.permission_name, p.description as PERMISSION_DESCRIPTION,1 as selected
+		from ECX.role_permission rp, ECX.permission p
+		where rp.permission_name = p.permission_name
+		and rp.ROLE_NAME = #{rolename}
+		union all
+		select p.permission_name, p.description as PERMISSION_DESCRIPTION,0 as selected
+		from ECX.permission p
+		where p.permission_name not in (select p.permission_name
+		from ECX.role_permission rp, ECX.permission p
+		where rp.permission_name = p.permission_name
+		and rp.ROLE_NAME = #{rolename})
+		and p.permission_name like '%*%'
+		union all
+		select p.permission_name, p.description as PERMISSION_DESCRIPTION,0 as selected
+		from ECX.permission p
+		where p.permission_name not in (select p.permission_name
+		from ECX.role_permission rp, ECX.permission p
+		where rp.permission_name = p.permission_name
+		and rp.ROLE_NAME = #{rolename}
+		)
+		and p.permission_name not like '%*%'
+    </select>
+
+</mapper>

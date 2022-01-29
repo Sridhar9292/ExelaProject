@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.BillerMapper'>
+	<resultMap type='com.exelatech.ecxapi.model.Biller'
+		id='BillerResult'>
+		<result property='clientCode' column='CLIENT_CODE' />
+		<result property='clientName' column='CLIENT_NAME' />
+		<result property='clientLobCode' column='CLIENT_LOB_CODE' />
+		<result property='clientLobName' column='CLIENT_LOB_NAME' />
+		<result property='delivery' column='BC_DELIVERY' />
+		<result property='billerName' column='BC_BILLER_NAME' />
+		<result property='billerAliasName' column='BC_BILLER_ALIAS' />
+		<result property='billerCode' column='BC_BILLER_CODE' />
+		<result property='billerSiteCode' column='BC_BILLER_SITE' />
+		<result property='accountingEnabled'
+			column='BC_ACCOUNTING_ENABLED' />
+		<result property='merchantId' column='MERCHANT_ID' />
+		<result property='merchantCode' column='MERCHANT_CODE' />
+		<result property='billerEnabled' column='BILLER_ENABLED' />
+		<result property='count' column='count' />
+		<collection property='externalBillerIdsList'
+			ofType='com.exelatech.ecxapi.model.ExternalBillerIds'
+			resultMap='EBillerIdsResult' />
+	</resultMap>
+
+	<resultMap
+		type='com.exelatech.ecxapi.model.ExternalBillerIds'
+		id='EBillerIdsResult'>
+		<result property='clientCode' column='CLIENT_CODE' />
+		<result property='clientLobCode' column='CLIENT_LOB_CODE' />
+		<result property='vendorCode' column='VENDOR_CODE' />
+		<result property='billerId' column='BILLER_ID' />
+		<result property='enabled' column='ACCOUNT_STATUS_ENABLED' />
+		<result property='returnsEnabled' column='RETURNS_ENABLED' />
+		<result property='returnsConfEnabled'
+			column='RETURNS_CONF_ENABLED' />
+		<result property='stopFileEnabled' column='STOP_FILE_ENABLED' />
+		<result property='stopFileRetcode' column='STOP_FILE_RETCODE' />
+		<result property='posFileEnabled' column='POS_FILE_ENABLED' />
+		<result property='posFileRetcode' column='POS_FILE_RETCODE' />
+		<result property='vendorChannelId' column='VENDOR_CHANNEL_ID' />
+		<result property='goLiveDate' column='GO_LIVE_DATE' />
+	</resultMap>
+
+	<resultMap type='com.exelatech.ecxapi.model.LookUp'
+		id='LookUpResult'>
+		<result property='subType' column='SUB_TYPE' />
+		<result property='name' column='NAME' />
+		<result property='value' column='VALUE' />
+	</resultMap>
+
+	<select id="clientExists" resultMap="BillerResult">
+		select count(1) as count
+		from ECX.clients where client_code = #{clientCode}
+	</select>
+
+	<select id="clientLobExists" resultMap="BillerResult">
+		select count(1) as count
+		from ECX.client_lobs where client_code =
+		#{clientCode} and
+		client_lob_code = #{clientLobCode}
+	</select>
+
+	<select id="billerExists" resultMap="BillerResult">
+		select count(1) as count
+		from ECX.biller_config where client_code =
+		#{clientCode} and
+		client_lob_code = #{clientLobCode}
+	</select>
+
+	<select id="billerVendorExists" resultMap="BillerResult">
+		select count(1) as
+		count from ECX.external_biller_ids where
+		vendor_code=#{vendorCode} and
+		biller_id=#{billerId}
+	</select>
+
+	<select id="get" resultMap="BillerResult">
+		SELECT C.CLIENT_CODE, C.CLIENT_NAME, CL.CLIENT_LOB_CODE,
+		CL.CLIENT_LOB_NAME, BC.BC_DELIVERY, BC.BC_BILLER_NAME,
+		BC.BC_BILLER_ALIAS,BC.BC_BILLER_CODE, BC.BC_BILLER_SITE,
+		EBI.VENDOR_CODE, EBI.BILLER_ID, EBI.ACCOUNT_STATUS_ENABLED,
+		EBI.RETURNS_ENABLED, EBI.RETURNS_CONF_ENABLED, EBI.STOP_FILE_ENABLED,
+		EBI.STOP_FILE_RETCODE, EBI.POS_FILE_ENABLED, EBI.POS_FILE_RETCODE,
+		EBI.VENDOR_CHANNEL_ID,EBI.GO_LIVE_DATE, BC.BC_ACCOUNTING_ENABLED,
+		BC.MERCHANT_ID, BC.MERCHANT_CODE,BC.BILLER_ENABLED
+		FROM
+		ECX.BILLER_CONFIG BC, ECX.CLIENTS C, ECX.CLIENT_LOBS CL,
+		ECX.EXTERNAL_BILLER_IDS EBI
+		WHERE C.CLIENT_CODE = CL.CLIENT_CODE
+		AND
+		CL.CLIENT_CODE = BC.CLIENT_CODE
+		AND CL.CLIENT_LOB_CODE =
+		BC.CLIENT_LOB_CODE
+		and BC.CLIENT_CODE = EBI.CLIENT_CODE
+		AND
+		BC.CLIENT_LOB_CODE = EBI.CLIENT_LOB_CODE
+		AND BC.CLIENT_CODE =
+		#{clientCode}
+		AND BC.CLIENT_LOB_CODE = #{clientLobCode}
+		<if test="filter != null and filter.size() > 0">
+			AND BC.CLIENT_CODE in
+			<foreach item="item" index="index" collection="filter"
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<insert id="addClient"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		INSERT INTO ECX.CLIENTS (CLIENT_CODE, CLIENT_NAME)
+		VALUES (#{clientCode},
+		#{clientName})
+	</insert>
+
+	<update id="updateClient"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		UPDATE ECX.CLIENTS SET CLIENT_NAME=#{clientName} WHERE
+		CLIENT_CODE=#{clientCode}
+	</update>
+
+	<insert id="addClientLob"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		INSERT INTO ECX.CLIENT_LOBS (CLIENT_CODE,
+		CLIENT_LOB_CODE, CLIENT_LOB_NAME)
+		VALUES (#{clientCode},
+		#{clientLobCode}, #{clientLobName})
+	</insert>
+
+	<update id="updateClientLob"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		UPDATE ECX.CLIENT_LOBS SET
+		CLIENT_LOB_NAME=#{clientLobName} WHERE
+		CLIENT_CODE=#{clientCode} AND
+		CLIENT_LOB_CODE=#{clientLobCode}
+	</update>
+
+	<insert id="addBiller"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		INSERT INTO ECX.BILLER_CONFIG (BC_BILLER_CODE,
+		BC_BILLER_ALIAS,
+		BC_BILLER_SITE, CLIENT_CODE, CLIENT_LOB_CODE,
+		BC_BILLER_NAME,
+		BC_DELIVERY,MERCHANT_ID,MERCHANT_CODE,BC_ACCOUNTING_ENABLED) VALUES
+		(#{billerCode},
+		#{billerAliasName ,jdbcType=VARCHAR}, #{billerSiteCode ,jdbcType=VARCHAR}, #{clientCode},
+		#{clientLobCode}, #{billerName ,jdbcType=VARCHAR},
+		#{delivery},#{merchantId ,jdbcType=VARCHAR},#{merchantCode ,jdbcType=VARCHAR},#{accountingEnabled ,jdbcType=VARCHAR} )
+	</insert>
+
+	<insert id="updateBiller"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		UPDATE ECX.BILLER_CONFIG SET
+		BC_BILLER_CODE=#{billerCode},
+		BC_BILLER_ALIAS=#{billerAliasName},
+		BC_BILLER_SITE=#{billerSiteCode},
+		BC_BILLER_NAME=#{billerName},
+		BC_DELIVERY=#{delivery},
+		BC_ACCOUNTING_ENABLED=#{accountingEnabled},
+		MERCHANT_ID=#{merchantId},
+		MERCHANT_CODE=#{merchantCode} WHERE
+		CLIENT_CODE=#{clientCode} AND
+		CLIENT_LOB_CODE=#{clientLobCode}
+	</insert>
+
+	<update id="updateBillerEnabled"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		UPDATE ECX.BILLER_CONFIG SET
+		BILLER_ENABLED=#{billerEnabled} WHERE
+		CLIENT_CODE=#{clientCode} AND
+		CLIENT_LOB_CODE=#{clientLobCode}
+	</update>
+
+	<insert id="addBillerVendor" parameterType="java.util.List">
+		INSERT ALL
+		<foreach collection="list" item="element" index="index">
+			INTO
+			ECX.EXTERNAL_BILLER_IDS (BILLER_ID, VENDOR_CODE, CLIENT_CODE,
+			CLIENT_LOB_CODE, ACCOUNT_STATUS_ENABLED, RETURNS_ENABLED,
+			RETURNS_CONF_ENABLED, STOP_FILE_ENABLED, STOP_FILE_RETCODE,
+			POS_FILE_ENABLED, POS_FILE_RETCODE, VENDOR_CHANNEL_ID, GO_LIVE_DATE)
+			VALUES (#{element.billerId}, #{element.vendorCode},
+			#{element.clientCode}, #{element.clientLobCode}, #{element.enabled},
+			#{element.returnsEnabled,jdbcType=VARCHAR},
+			#{element.returnsConfEnabled},
+			#{element.stopFileEnabled,jdbcType=VARCHAR},
+			#{element.stopFileRetcode,jdbcType=VARCHAR},
+			#{element.posFileEnabled,jdbcType=VARCHAR},
+			#{element.posFileRetcode,jdbcType=VARCHAR},
+			#{element.vendorChannelId}, #{element.goLiveDate,jdbcType=DATE})
+		</foreach>
+		SELECT 1 from DUAL
+	</insert>
+
+	<delete id="deleteBillerVendor"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		DELETE FROM ECX.EXTERNAL_BILLER_IDS WHERE
+		CLIENT_CODE=#{clientCode} AND
+		CLIENT_LOB_CODE=#{clientLobCode}
+	</delete>
+
+	<update id="enableBillerVendor"
+		parameterType="com.exelatech.ecxapi.model.ExternalBillerIds">
+		UPDATE ECX.EXTERNAL_BILLER_IDS SET
+		ACCOUNT_STATUS_ENABLED='TRUE' WHERE
+		CLIENT_CODE=#{clientCode} AND
+		CLIENT_LOB_CODE=#{clientLobCode} AND
+		VENDOR_CODE=#{vendorCode}
+	</update>
+
+	<update id="disableBillerVendor"
+		parameterType="com.exelatech.ecxapi.model.ExternalBillerIds">
+		UPDATE ECX.EXTERNAL_BILLER_IDS SET
+		ACCOUNT_STATUS_ENABLED='FALSE' WHERE
+		CLIENT_CODE=#{clientCode} AND
+		CLIENT_LOB_CODE=#{clientLobCode} AND
+		VENDOR_CODE=#{vendorCode}
+	</update>
+
+	<delete id="deleteBiller"
+		parameterType="com.exelatech.ecxapi.model.Biller">
+		DELETE FROM ECX.BILLER_CONFIG WHERE
+		CLIENT_CODE=#{clientCode} AND
+		CLIENT_LOB_CODE=#{clientLobCode}
+	</delete>
+
+	<select id="getLookupDetails" resultMap="LookUpResult">
+		SELECT SUB_TYPE,
+		NAME,VALUE FROM ECX.ECX_LOOKUP_TABLE WHERE SUB_TYPE IN
+		('RPPS_ID',
+		'STOP_FILE', 'POS_FILE','POSTING_ID') AND ACTIVE='Y'
+	</select>
+
+	<select id="getPostingId" resultMap="LookUpResult">
+		SELECT NAME,VALUE FROM
+		ECX.ECX_LOOKUP_TABLE WHERE SUB_TYPE IN ('POSTING_ID')
+		AND
+		VALUE=#{value} AND ACTIVE='Y'
+	</select>
+</mapper>

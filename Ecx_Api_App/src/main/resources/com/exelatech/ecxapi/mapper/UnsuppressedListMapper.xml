@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.UnsuppressedListMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.UnsuppressedList' id='UnsuppressedListResult'>
+    	<id property='id' column='ID'/> 
+    	<result property='subAccount' column='SUBACCOUNT_CODE'/>
+   	    <result property='emailAddress' column='EMAILADDRESS'/>
+        <result property='suppressTime' column='SUPPRESS_TIME'/>
+        <result property='unSuppressTime' column='UNSUPPRESS_TIME'/>
+        <result property='byUser' column='BY_USER'/>
+        <result property='entryDate' column='ENTRY_DATE'/>
+        <result property='modifyDate' column='MODIFY_DATE'/>
+        <result property='userAbbrev' column='USER_ABBREV'/>
+    </resultMap>
+    
+    <select id="search" resultMap="UnsuppressedListResult">
+        SELECT eeua.*
+        FROM ECX.ecx_email_unsuppress_audit eeua
+        WHERE upper(eeua.SUBACCOUNT_CODE) LIKE upper(#{searchTerm})
+        OR upper(eeua.EMAILADDRESS) LIKE upper(#{searchTerm})
+        OR upper(eeua.SUPPRESS_TIME) LIKE upper(#{searchTerm})
+        OR upper(eeua.UNSUPPRESS_TIME) LIKE upper(#{searchTerm})
+        OR upper(eeua.BY_USER) LIKE upper(#{searchTerm})
+        ORDER BY eeua.SUBACCOUNT_CODE
+    </select> 
+    
+    <select id="getAll" resultMap="UnsuppressedListResult">
+        SELECT eeua.*
+        FROM ECX.ecx_email_unsuppress_audit eeua
+        ORDER BY eeua.SUBACCOUNT_CODE
+    </select>
+    
+    <insert id="insert" parameterType="com.exelatech.ecxapi.model.UnsuppressedList">
+        INSERT
+        INTO ECX.ECX_EMAIL_UNSUPPRESS_AUDIT
+            (
+				SUBACCOUNT_CODE,
+				EMAILADDRESS,
+				SUPPRESS_TIME,
+				UNSUPPRESS_TIME,
+				BY_USER
+            )
+            VALUES
+            (
+                #{subAccount},
+                #{emailAddress},
+                #{suppressTime},
+                #{unSuppressTime},
+                #{byUser}
+            )
+    </insert>
+
+</mapper>

@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace='com.exelatech.ecxapi.mapper.PrintHubJobHeaderMapper'>
+	<resultMap
+		type='com.exelatech.ecxapi.model.PrintHubJobHeader'
+		id='printhubJobHeaderResult'>
+		<result property='groupID' column='GROUP_ID' />
+		<result property='solutionID' column='SOLUTION_ID' />
+		<result property='appCode' column='APP_CODE' />
+		<result property='jobNumber' column='JOB_NUMBER' />
+		<result property='destination' column='TGT_PRINT_SITE_ID' />
+		<result property='receivedTime' column='START_DATE' />
+		<result property='deliveryTime' column='END_DATE' />
+		<result property='status' column='STATUS' />
+		<result property='entryDate' column='ENTRY_DATE' />
+		<result property='modifiedDate' column='MODIFIED_DATE' />
+		<result property='elapsedTime' column='ELAPSED_TIME' />
+		<result property='src' column='SOURCE_SITE_ID' />
+		<result property='errDesc' column='ERROR_DESC' />
+	</resultMap>
+	
+	<resultMap id="printhubJobHeaderResult2" type="com.exelatech.ecxapi.model.PrintHubJobHeader" extends="printhubJobHeaderResult">
+    	<collection property='summary'
+			ofType='com.exelatech.ecxapi.model.PrintHubJobDetails'
+			resultMap='PrintHubDetailsResult2' />
+	</resultMap>
+
+	<resultMap
+		type='com.exelatech.ecxapi.model.PrintHubJobDetails'
+		id='PrintHubDetailsResult'>
+		<result property='groupID' column='GROUP_ID' />
+		<result property='contID' column='CONT_ID' />
+		<result property='pipeLineID' column='PIPELINE_ID' />
+		<result property='fileName' column='FILE_NAME' />
+		<result property='fileDate' column='FILE_DATE' />
+		<result property='fileSize' column='FILE_SIZE' />
+		<result property='srcSiteID' column='SOURCE_SITE_ID' />
+		<result property='tgtSiteID' column='TGT_SITE_ID' />
+		<result property='startTime' column='START_DATE' />
+		<result property='endTime' column='END_DATE' />
+		<result property='contStatus' column='CONT_STATUS' />
+		<result property='entryDate' column='ENTRY_DATE' />
+		<result property='modifiedDate' column='MODIFIED_DATE' />
+		<result property='elapsedTime' column='ELAPSED_TIME' />
+		<result property='errDesc' column='ERROR_DESC' />
+	</resultMap>
+	
+	<resultMap id="PrintHubDetailsResult2" type="com.exelatech.ecxapi.model.PrintHubJobDetails" extends="PrintHubDetailsResult">
+    	<collection property='detail'
+			ofType='com.exelatech.ecxapi.model.PrintHubJobPayload'
+			resultMap='PrintHubPayloadResult' />
+	</resultMap>
+
+
+	<resultMap
+		type='com.exelatech.ecxapi.model.PrintHubJobPayload'
+		id='PrintHubPayloadResult'>
+		<result property='contID' column='CONT_ID' />
+		<result property='instanceID' column='INSTANCE_ID' />
+		<result property='payloadName' column='PAYLOAD_NAME' />
+		<result property='payloadDate' column='PAYLOAD_DATE' />
+		<result property='payloadSize' column='PAYLOAD_SIZE' />
+		<result property='payloadTgt' column='PAYLOAD_TGT' />
+		<result property='payStatus' column='PAY_STATUS' />
+		<result property='entryDate' column='ENTRY_DATE' />
+		<result property='modifiedDate' column='MODIFIED_DATE' />
+	</resultMap>
+
+
+	<select id="getDate" resultMap="printhubJobHeaderResult">
+		select a.*,b.*,c.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+		where
+		TO_CHAR(a.START_DATE,'DDMMYYYY') = #{receivedTime ,jdbcType=VARCHAR}
+
+	</select>
+
+	<select id="getGroupid" resultMap="printhubJobHeaderResult">
+		select a.*,b.*,c.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+		where
+		a.GROUP_ID=#{groupID}
+	</select>
+	
+	<select id="dashboardcontDetailsByContId" resultMap="PrintHubDetailsResult">
+		select a.*,b.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+		where
+		b.CONT_ID=#{containerId}
+	</select>
+	
+	<select id="dashboardcontDetailsByGroupId" resultMap="PrintHubDetailsResult">
+		select a.*,b.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+		where
+		b.GROUP_ID=#{groupId}
+	</select>
+
+
+	<select id="getDetailsByInstanceId"
+		resultMap="PrintHubPayloadResult">
+		select c.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+		where
+		c.INSTANCE_ID=#{instanceId}
+	</select>
+	
+	<select id="getDashboardPayLoadByContId"
+		resultMap="PrintHubPayloadResult">
+		select c.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+		where
+		c.CONT_ID=#{contId}
+	</select>
+
+	<select id="getDetailsByInstanceIdFileName"
+		resultMap="PrintHubPayloadResult">
+		select c.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+		where
+		c.INSTANCE_ID=#{instanceId}
+		and b.FILE_NAME=#{fileName}
+	</select>
+
+	<select id="getByMinHoursSec"
+		resultMap="printhubJobHeaderResult">
+		select distinct a.*,b.SOURCE_SITE_ID from ecx.PH_JOB a
+		 join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)	
+		where	
+		a.START_DATE between current_timestamp - interval '${time}' minute
+   		and current_timestamp
+	</select>
+
+	<select id="getByFromDate" resultMap="printhubJobHeaderResult">
+		select distinct a.*,b.SOURCE_SITE_ID from ecx.PH_JOB a
+		 join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)	
+		where	
+		a.START_DATE >= to_date('${fromDate}', 'DDMMYYYY')
+
+	</select>
+
+	<select id="getByFromToDate" resultMap="printhubJobHeaderResult">
+		select distinct a.*,b.SOURCE_SITE_ID from ecx.PH_JOB a
+		 join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)	
+		where	
+		a.START_DATE >= to_date('${fromDate}', 'DDMMYYYY')
+		and a.START_DATE &lt;= to_date('${toDate}', 'DDMMYYYY')
+
+	</select>
+
+	<select id="getAll" resultMap="printhubJobHeaderResult">
+		select a.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+		where 
+		a.START_DATE between current_timestamp - interval '360' minute
+   		and current_timestamp
+	</select>
+
+
+
+	<insert id="jobHeaderInsert"
+		parameterType="com.exelatech.ecxapi.model.PrintHubJobHeader">
+		insert into ecx.PH_JOB
+		(GROUP_ID,SOLUTION_ID,APP_CODE,JOB_NUMBER,TGT_PRINT_SITE_ID,START_DATE,END_DATE,STATUS)
+		values (#{groupID},#{solutionID},#{appCode
+		,jdbcType=VARCHAR},#{jobNumber ,jdbcType=VARCHAR},#{destination
+		,jdbcType=VARCHAR},#{receivedTime ,jdbcType=VARCHAR},#{deliveryTime
+		,jdbcType=DATE},#{status ,jdbcType=VARCHAR})
+	</insert>
+
+	<insert id="jobDetailsInsert"
+		parameterType="com.exelatech.ecxapi.model.PrintHubJobDetails">
+
+		Insert into ecx.PH_JOB_DETAILS (GROUP_ID,CONT_ID,PIPELINE_ID,
+		FILE_NAME,FILE_DATE,FILE_SIZE,
+		SOURCE_SITE_ID,TGT_SITE_ID,START_DATE,
+		END_DATE,CONT_STATUS)
+		values (#{groupID},#{contID},#{pipeLineID ,jdbcType=VARCHAR},
+		#{fileName ,jdbcType=VARCHAR},#{fileDate ,jdbcType=VARCHAR},#{fileSize
+		,jdbcType=VARCHAR},
+		#{srcSiteID ,jdbcType=VARCHAR},#{tgtSiteID ,jdbcType=VARCHAR},#{startTime
+		,jdbcType=VARCHAR},
+		#{endTime ,jdbcType=VARCHAR},#{contStatus ,jdbcType=VARCHAR})
+	</insert>
+
+
+	<insert id="jobPayloadInsert"
+		parameterType="com.exelatech.ecxapi.model.PrintHubJobPayload">
+		INSERT INTO
+		ecx.PH_PAYLOAD_DETAILS (CONT_ID,INSTANCE_ID,
+		PAYLOAD_NAME,PAYLOAD_DATE,PAYLOAD_SIZE,
+		PAYLOAD_TGT, PAY_STATUS)
+		values (#{contID},#{instanceID},
+		#{payloadName ,jdbcType=VARCHAR},#{payloadDate ,jdbcType=VARCHAR},#{payloadSize
+		,jdbcType=VARCHAR},
+		#{payloadTgt ,jdbcType=VARCHAR}, #{payStatus ,jdbcType=VARCHAR})
+	</insert>
+
+	<insert id="jobHeaderUpdate"
+		parameterType="com.exelatech.ecxapi.model.PrintHubJobHeader">
+		update ecx.PH_JOB set STATUS =#{status ,jdbcType=VARCHAR} where
+		GROUP_ID=#{groupID}
+	</insert>
+	<insert id="jobDetailsUpdate"
+		parameterType="com.exelatech.ecxapi.model.PrintHubJobDetails">
+		update ecx.PH_JOB_DETAILS set CONT_STATUS =#{contStatus ,jdbcType=VARCHAR}
+		where GROUP_ID=#{groupID} and CONT_ID=#{contID}
+	</insert>
+
+	<insert id="jobPayloadUpdate"
+		parameterType="com.exelatech.ecxapi.model.PrintHubJobPayload">
+		update ecx.PH_PAYLOAD_DETAILS set PAY_STATUS =#{payStatus ,jdbcType=VARCHAR}
+		where CONT_ID=#{contID} and INSTANCE_ID = #{instanceID}
+	</insert>
+	
+	
+	<select id="getDtlBySolutionName" resultMap="printhubJobHeaderResult">
+		     select a.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+         where a.SOLUTION_ID = #{solutionname}
+     </select>
+       <select id="getDtlByAppCode" resultMap="printhubJobHeaderResult">
+		     select a.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+         where a.APP_CODE = #{appcode}
+     </select>
+       <select id="getDtlByJobNumber" resultMap="printhubJobHeaderResult">
+		     select a.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+         where a.JOB_NUMBER = #{jobnumber}
+     </select>
+       <select id="getDtlBydestination" resultMap="printhubJobHeaderResult">
+		     select a.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+         where a.TGT_PRINT_SITE_ID = #{destination}
+     </select>
+       <select id="getDtlBySolutionId" resultMap="printhubJobHeaderResult">
+		     select a.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+         where a.SOLUTION_ID = #{solutionid}
+     </select>
+      <select id="getDtlByInstanceId" resultMap="printhubJobHeaderResult">
+		     select a.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+         where c.INSTANCE_ID = #{instanceid}
+     </select>
+      <select id="getDtlByFileName" resultMap="printhubJobHeaderResult2">
+		     select a.*,b.*,c.* from ecx.PH_JOB a
+		left join ecx.PH_JOB_DETAILS b on (a.GROUP_ID = b.GROUP_ID)
+		left join ecx.PH_PAYLOAD_DETAILS c on (b.CONT_ID= c.CONT_ID)
+         where b.FILE_NAME = #{fileName}
+     </select>
+
+</mapper>

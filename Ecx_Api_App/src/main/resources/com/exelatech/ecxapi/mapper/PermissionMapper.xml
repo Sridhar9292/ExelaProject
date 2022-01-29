@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.PermissionMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.Permission' id='PermissionResult'>
+        <result property='permissionName' column='PERMISSION_NAME'/>
+        <result property='description' column='DESCRIPTION'/>
+        <result property='count' column='count'/>
+    </resultMap>
+
+    <select id="getAll" resultMap="PermissionResult">
+		select p.*
+		from ECX.permission p
+		where p.permission_name like '%*%'
+		union all
+		select p.*
+		from ECX.permission p
+		where p.permission_name not like '%*%'
+    </select>
+
+    <select id="getAllDistinct" resultMap="PermissionResult">
+        select distinct p.* from ECX.permission p
+    </select>
+
+    <select id="search" resultMap="PermissionResult">
+        select p.* from ECX.permission p where permission_name like #{searchTerm} or description like #{searchTerm}
+    </select>
+
+    <select id="get" resultMap="PermissionResult">
+        select p.* from ECX.permission p where p.permission_name = #{permissionName}
+    </select>
+
+    <select id="exists" resultMap="PermissionResult">
+        select count(1) as count from ECX.permission p where p.permission_name = #{permissionName}
+    </select>
+
+    <insert id="insert" parameterType="com.exelatech.ecxapi.model.Permission">
+        insert into ECX.permission (permission_name, description) values (#{permissionName}, #{description})
+    </insert>
+
+    <update id="update" parameterType="com.exelatech.ecxapi.model.Permission">
+        update ECX.permission set description = #{description} where permission_name = #{permissionName}
+    </update>
+
+    <delete id="remove" parameterType="com.exelatech.ecxapi.model.Permission">
+        delete from ECX.permission where permission_name = #{permissionName}
+    </delete>
+
+</mapper>

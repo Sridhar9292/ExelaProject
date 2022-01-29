@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace='com.exelatech.ecxapi.mapper.KaiserFileMonitor'>
+
+	<resultMap
+		type='com.exelatech.ecxapi.model.KaiserMonitor' id='KaiserMonitorinfo'>
+		<result property='id' column='ID' />
+		<result property="fileName" column='FILE_NAME' />
+		<result property='entryDate' column='ENTRY_DATE' />
+		<result property='fileStatus' column='FILE_STATUS' />
+	</resultMap>
+	
+	<select id="getAll" resultMap="KaiserMonitorinfo">
+		SELECT * FROM ECX.ECX_KAISER_MONITOR order BY ENTRY_DATE DESC fetch first 500 rows only
+	</select>
+   
+ <select id="getDetailsUsingDate" resultMap="KaiserMonitorinfo">
+		SELECT * FROM ECX.ECX_KAISER_MONITOR WHERE TO_CHAR(ENTRY_DATE,'DDMMYYYY') =#{param1 ,jdbcType=VARCHAR}
+	</select>
+   
+
+</mapper>

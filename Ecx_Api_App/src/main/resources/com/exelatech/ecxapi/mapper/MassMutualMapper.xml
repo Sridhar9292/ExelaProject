@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.MassMutualMapper'>
+ <resultMap type='com.exelatech.ecxapi.model.MassMutualFeedInfo' id='MassMutualProcessResult'>
+        <id property='massMutualFeedID' column='MASS_MUTUAL_FEED_ID'/>
+        <result property='fileReceivedDate' column='ENTRY_DATE'/>
+        <result property='fileName' column='FILE_NAME'/>
+        <result property='status' column='FEED_STATUS'/>
+        <result property='description' column='DESCRIPTION'/>       
+      </resultMap>
+
+    <select id="getMassMutualProcessInfo" resultMap="MassMutualProcessResult">
+         select  MASS_MUTUAL_FEED_ID,
+      		    to_char(ENTRY_DATE,'yyyy-mm-dd hh24:mi:ss') as ENTRY_DATE,
+      		    FILE_NAME,
+      		    FEED_STATUS,
+      			DESCRIPTION     
+        from ECX.ECX_MASS_MUTUAL_FEED order by ENTRY_DATE desc
+    </select> 
+    
+  <resultMap type='com.exelatech.ecxapi.model.MassMutualDetailInfo' id='MassMutualDetailResult'>
+        <id property='massMutualDetailID' column='MASS_MUTUAL_DETAIL_ID'/>
+        <id property='massMutualFeedID' column='MASS_MUTUAL_FEED_ID'/>
+        <result property='reference' column='REFERENCE'/>
+        <result property='trackingNumber' column='TRACKING_NUMBER'/>
+        <result property='totalCost' column='TOTAL_COST'/>
+        <result property='shipmentDate' column='SHIPMENT_DATE'/>   
+        <result property='attentionTo' column='ATTENTION_TO'/>
+        <result property='company' column='COMPANY'/>
+        <result property='address1' column='ADDRESS1'/>
+        <result property='address2' column='ADDRESS2'/>  
+        <result property='address3' column='ADDRESS3'/>
+        <result property='state' column='STATE'/>
+        <result property='zipCode' column='ZIP_CODE'/>
+        <result property='processedStatus' column='PROCESSED_STATUS'/>  
+        <result property='description' column='DESCRIPTION'/>  
+            
+      </resultMap>
+
+    <select id="getmassmutualDetailInfo" resultMap="MassMutualDetailResult">
+        select  MASS_MUTUAL_DETAIL_ID,
+         		MASS_MUTUAL_FEED_ID,
+      		    REFERENCE,
+      		    TRACKING_NUMBER,
+      		    to_char( TOTAL_COST,'99999999999999D99') as TOTAL_COST ,
+             	to_char(SHIPMENT_DATE,'yyyy-mm-dd hh24:mi:ss') as SHIPMENT_DATE,
+      			ATTENTION_TO,
+      			COMPANY,
+      			ADDRESS1,
+      			ADDRESS2,
+      			ADDRESS3,
+      			STATE,
+      			ZIP_CODE,
+      			PROCESSED_STATUS,
+      			DESCRIPTION    
+        from   ecx.ECX_MASS_MUTUAL_DETAIL
+		where  MASS_MUTUAL_FEED_ID = #{infoId}  order by MASS_MUTUAL_DETAIL_ID desc
+    </select>
+    
+
+    <select id="getmassmutualDetailInfoSearchRef" resultMap="MassMutualDetailResult">
+         select  MASS_MUTUAL_DETAIL_ID,
+         		MASS_MUTUAL_FEED_ID,
+      		    REFERENCE,
+      		    TRACKING_NUMBER,
+      		    to_char( TOTAL_COST,'99999999999999D99') as TOTAL_COST ,
+             	to_char(SHIPMENT_DATE,'yyyy-mm-dd hh24:mi:ss') as SHIPMENT_DATE,
+      			ATTENTION_TO,
+      			COMPANY,
+      			ADDRESS1,
+      			ADDRESS2,
+      			ADDRESS3,
+      			STATE,
+      			ZIP_CODE,
+      			PROCESSED_STATUS,
+      			DESCRIPTION    
+        from   ecx.ECX_MASS_MUTUAL_DETAIL
+		where  REFERENCE like  #{searchTerm}
+		and    MASS_MUTUAL_FEED_ID = #{infoId}
+    </select>
+    
+    
+    <select id="getmassmutualDetailInfoSearchTN" resultMap="MassMutualDetailResult">
+         select  MASS_MUTUAL_DETAIL_ID,
+         		MASS_MUTUAL_FEED_ID,
+      		    REFERENCE,
+      		    TRACKING_NUMBER,
+      		    to_char( TOTAL_COST,'99999999999999D99') as TOTAL_COST ,
+             	to_char(SHIPMENT_DATE,'yyyy-mm-dd hh24:mi:ss') as SHIPMENT_DATE,
+      			ATTENTION_TO,
+      			COMPANY,
+      			ADDRESS1,
+      			ADDRESS2,
+      			ADDRESS3,
+      			STATE,
+      			ZIP_CODE,
+      			PROCESSED_STATUS,
+      			DESCRIPTION    
+        from   ecx.ECX_MASS_MUTUAL_DETAIL 
+		where  TRACKING_NUMBER like #{searchTerm}
+		and    MASS_MUTUAL_FEED_ID = #{infoId}
+    </select>
+   
+    <select id="getmassmutualDetailInfoStatus" resultMap="MassMutualDetailResult">
+        select  MASS_MUTUAL_DETAIL_ID,
+         		MASS_MUTUAL_FEED_ID,
+      		    REFERENCE,
+      		    TRACKING_NUMBER,
+      		    to_char( TOTAL_COST,'99999999999999D99') as TOTAL_COST ,
+             	to_char(SHIPMENT_DATE,'yyyy-mm-dd hh24:mi:ss') as SHIPMENT_DATE,
+      			ATTENTION_TO,
+      			COMPANY,
+      			ADDRESS1,
+      			ADDRESS2,
+      			ADDRESS3,
+      			STATE,
+      			ZIP_CODE,
+      			PROCESSED_STATUS,
+      			DESCRIPTION    
+        from   ecx.ECX_MASS_MUTUAL_DETAIL
+		where  PROCESSED_STATUS like #{searchTerm}
+		and    MASS_MUTUAL_FEED_ID = #{infoId}
+    </select>
+</mapper>

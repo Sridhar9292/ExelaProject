@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.ErrorEmailListMapper'>
+   
+    <resultMap type='com.exelatech.ecxapi.model.ErrorEmail' id='ErrorEmail'>
+    	<id property='emailUUID' column='EMAIL_UUID'/>
+   	    <result property='emailAddress' column='EMAIL_TO'/>
+    </resultMap>
+    
+    
+    <select id="search" resultMap="ErrorEmail">
+        SELECT ECX.EMAIL_UUID, ECX.EMAIL_TO FROM ECX.ECX_EMAIL ECX WHERE <![CDATA[ ECX.EMAIL_STATUS in ('Error','Invalid Email') ]]> AND (upper(ECX.EMAIL_TO) LIKE upper(#{searchTerm}) OR upper(ECX.SUBACCOUNT_CODE) LIKE upper(#{searchTerm}))
+    </select>  
+    
+    <select id="getSubAccounts" resultType="string">
+        SELECT EEC.SUBACCOUNT_CODE
+        FROM ECX.ECX_EMAIL_CONFIG EEC        
+        ORDER BY EEC.SUBACCOUNT_CODE
+    </select>
+    
+    <select id="getAll" resultMap="ErrorEmail">
+    
+       SELECT ECX.EMAIL_UUID, ECX.EMAIL_TO FROM ECX.ECX_EMAIL ECX WHERE <![CDATA[ ECX.EMAIL_STATUS in ('Error','Invalid Email')]]>
+    
+    </select>
+    
+    <update id="update" parameterType="com.exelatech.ecxapi.model.ErrorEmail">
+    
+    UPDATE ECX.ECX_EMAIL ECX 
+    
+    SET ECX.EMAIL_TO = #{emailAddress} , <![CDATA[ ECX.EMAIL_STATUS = 'Queued' ]]>
+    
+    WHERE
+    
+    ECX.EMAIL_UUID = #{emailUUID}
+    
+    </update>
+    
+   
+</mapper>

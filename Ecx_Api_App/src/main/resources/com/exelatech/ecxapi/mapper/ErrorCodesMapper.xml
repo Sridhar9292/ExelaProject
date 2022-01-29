@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.ErrorCodesMapper'>
+	<resultMap type='com.exelatech.ecxapi.model.ErrorCodes' id='ErrorCodesResult'>
+		<id property='errorCode' column='ERROR_CODE'/>
+		<result property='errorDesc' column='ERROR_DESC' />
+		<result property='errorCause' column='ERROR_CAUSE' />
+		<result property='errorResolution' column='ERROR_RESOLUTION' />
+	</resultMap>
+
+	<select id="getAll" resultMap="ErrorCodesResult">
+		SELECT ERROR_CODE,
+		ERROR_DESC,
+		ERROR_CAUSE,
+		ERROR_RESOLUTION
+		FROM ECX.ERROR_CODES
+	</select>
+
+
+	<select id="get" resultMap="ErrorCodesResult">
+		SELECT ERROR_CODE,
+		ERROR_DESC,
+		ERROR_CAUSE,
+		ERROR_RESOLUTION
+		FROM ECX.ERROR_CODES
+		WHERE ERROR_CODE=#{errorCode}
+	</select>
+
+</mapper>

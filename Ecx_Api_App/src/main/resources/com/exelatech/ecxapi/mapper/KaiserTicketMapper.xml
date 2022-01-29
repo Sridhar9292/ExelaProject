@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace='com.exelatech.ecxapi.mapper.KaiserTicketMapper'>
+
+
+    
+
+	<resultMap
+		type='com.exelatech.ecxapi.model.KaiserPaperTicketInfo'
+		id='kaiserTicketPaperInfo'>
+		<result property='appCode' column='APP_CODE' />
+		<result property='ritsJobNumber' column='RITS_JOB_NUMBER' />
+		<result property="recipientCopies" column='RECIPIENT_COPIES' />
+		<result property='entryDate' column='COLLECTION_DATE' />
+		<result property='printDate' column='PRINT_DATE' />
+		<result property='insertDate' column='INSERT_DATE' />
+		<result property='mailDate' column='MAIL_DATE' />
+		<result property='status' column='status' />
+		<result property='sent' column='sent_status_count' />
+		<result property='returnR' column='return_status_count' />
+		<result property='incomplete' column='incomplete_status_count' />
+		<result property='recovery' column='recovery_status_count' />
+		<result property='outsource' column='outsource_status_count' />
+		<result property='received' column='received_status_count' />
+		<result property='undeliverable'
+			column='undeliverable_status_count' />
+	</resultMap>
+ 
+
+     <update id="updateSent" >
+            UPDATE
+            ECX.KAISER_TICKET_PAPER_INFO ECX
+            SET  ECX.PRINT_MAIL_DATE = SYSDATE ,ECX.RECORD_STATUS = 'Sent'  WHERE ECX.RITS_JOB_NUMBER=#{jobNumber} and
+            (ECX.RECORD_STATUS not in ('Incomplete', 'Pulled','Undeliverable') or ( ECX.RECORD_STATUS is null))
+      </update>
+      
+	<select id="searchStatus" resultType="Integer">
+            SELECT COUNT(*) FROM 
+            ECX.KAISER_TICKET_PAPER_INFO ECX WHERE
+            ECX.RECORD_STATUS = 'Sent' and  ECX.RITS_JOB_NUMBER=#{jobNumber}
+    </select>
+    
+ <update id="updateOn">
+             UPDATE
+            ECX.KAISER_TICKET_PAPER_INFO ECX
+            SET  ECX.PRINT_MAIL_DATE =to_date(#{shipDate},'yyyy-mm-dd'),ECX.RECORD_STATUS = #{status} WHERE ECX.KAISER_TICKET_PAPER_INFO_ID = #{id} AND ECX.RITS_JOB_NUMBER=#{jobNumber}
+    </update>
+    
+
+	<select id="getAll" resultMap="kaiserTicketPaperInfo">
+
+
+		SELECT 'KAI200' APP_CODE,
+		rits_job_number,
+		SUM(RECIPIENT_COPIES) AS RECIPIENT_COPIES,
+		MAX(ENTRY_DATE) AS COLLECTION_DATE ,
+		MAX(MAIL_DATE) AS MAIL_DATE,
+		case  
+          WHEN   (COUNT(DECODE(record_status, 'Sent', 'Sent')) > 0)         
+         then  ('Sent '||COUNT(DECODE(record_status, 'Sent', 'Sent'))||'/' ||count(1))
+          else 'Incomplete'
+          end   status,
+		COUNT(DECODE(record_status, 'Sent', 'Sent')) AS sent_status_count ,
+		COUNT(DECODE(record_status, 'Return', 'Return')) AS return_status_count,
+		COUNT(DECODE(record_status, 'Incomplete', 'Incomplete')) AS
+		incomplete_status_count,
+		COUNT(DECODE(record_status, 'Recovery', 'Recovery')) AS recovery_status_count,
+		COUNT(DECODE(record_status, 'Outsource', 'Outsource')) AS
+		outsource_status_count,
+		COUNT(DECODE(record_status, 'Received', 'Received')) AS received_status_count,
+		COUNT(DECODE(record_status, 'Undeliverable', 'Undeliverable')) AS
+		undeliverable_status_count
+		FROM ecx.kaiser_ticket_paper_info
+		GROUP BY RITS_JOB_NUMBER
+		ORDER BY MAIL_DATE DESC
+	</select>
+   
+   <select id="search" resultMap="kaiserTicketPaperInfo">
+
+		select 'KAI200' APP_CODE,rits_job_number, SUM(RECIPIENT_COPIES)  AS
+		RECIPIENT_COPIES,MAX(ENTRY_DATE) AS COLLECTION_DATE ,
+		MAX(MAIL_DATE) AS MAIL_DATE,
+		case  
+          WHEN   (COUNT(DECODE(record_status, 'Sent', 'Sent')) > 0)         
+         then  ('Sent '||COUNT(DECODE(record_status, 'Sent', 'Sent'))||'/' ||count(1))
+          else 'Incomplete'
+          end   status,
+		count(decode(record_status, 'Sent', 'Sent')) as sent_status_count ,
+		count(decode(record_status, 'Return', 'Return')) as return_status_count,
+		count(decode(record_status, 'Incomplete', 'Incomplete')) as
+		incomplete_status_count,
+		count(decode(record_status, 'Recovery', 'Recovery')) as recovery_status_count,
+		count(decode(record_status, 'Outsource', 'Outsource')) as
+		outsource_status_count,
+		count(decode(record_status, 'Received', 'Received')) as received_status_count,
+		count(decode(record_status, 'Undeliverable', 'Undeliverable')) as
+		undeliverable_status_count
+		from ecx.kaiser_ticket_paper_info
+		Where
+		<!-- <if test="column=='PURCHASER_ID'"> PURCHASER_ID= #{value}</if>
+		<if test="column=='CONTRACT_ID'"> CONTRACT_ID= #{value}</if>
+		<if test="column=='VERSION_NUMBER'"> VERSION_NUMBER= #{value}</if> -->
+		<if test="column=='APP_CODE'"> APP_CODE= #{value}</if>
+		<if test="column=='RITS_JOB_NUMBER'"> RITS_JOB_NUMBER= #{value}</if>
+		<!-- <if test="column=='NAME'"> upper(FIRST_NAME)||upper(MI)||upper(LAST_NAME) LIKE
+			upper(#{value}) OR (upper(PURCHASER_NAME) LIKE upper(#{value}))</if>			
+			<if test="column=='CONTRACT'">PURCHASER_ID|| '-'||CONTRACT_ID||'-'||VERSION_NUMBER like #{value}</if> -->
+		GROUP BY RITS_JOB_NUMBER ORDER BY MAIL_DATE DESC
+
+	</select>
+	
+	 <select id="search_job" resultMap="kaiserTicketPaperInfo">
+		select 'KAI200' APP_CODE,rits_job_number, SUM(RECIPIENT_COPIES)  AS
+		RECIPIENT_COPIES,MAX(ENTRY_DATE) AS COLLECTION_DATE ,
+		MAX(MAIL_DATE) AS MAIL_DATE,
+		case  
+          WHEN   (COUNT(DECODE(record_status, 'Sent', 'Sent')) > 0)         
+         then  ('Sent '||COUNT(DECODE(record_status, 'Sent', 'Sent'))||'/' ||count(1))
+          else 'Incomplete'
+          end   status,
+		count(decode(record_status, 'Sent', 'Sent')) as sent_status_count ,
+		count(decode(record_status, 'Return', 'Return')) as return_status_count,
+		count(decode(record_status, 'Incomplete', 'Incomplete')) as
+		incomplete_status_count,
+		count(decode(record_status, 'Recovery', 'Recovery')) as recovery_status_count,
+		count(decode(record_status, 'Outsource', 'Outsource')) as
+		outsource_status_count,
+		count(decode(record_status, 'Received', 'Received')) as received_status_count,
+		count(decode(record_status, 'Undeliverable', 'Undeliverable')) as
+		undeliverable_status_count
+		from ecx.kaiser_ticket_paper_info
+		Where
+		RITS_JOB_NUMBER= #{value}
+		GROUP BY RITS_JOB_NUMBER ORDER BY MAIL_DATE DESC
+	</select>
+	
+	 <select id="search_Purchaser" resultMap="kaiserTicketPaperInfo">
+
+		select 'KAI200' APP_CODE,rits_job_number, SUM(RECIPIENT_COPIES)  AS
+		RECIPIENT_COPIES,MAX(ENTRY_DATE) AS COLLECTION_DATE ,
+		MAX(MAIL_DATE) AS MAIL_DATE,
+		case  
+          WHEN   (COUNT(DECODE(record_status, 'Sent', 'Sent')) > 0)         
+         then  ('Sent '||COUNT(DECODE(record_status, 'Sent', 'Sent'))||'/' ||count(1))
+          else 'Incomplete'
+          end   status,
+		count(decode(record_status, 'Sent', 'Sent')) as sent_status_count ,
+		count(decode(record_status, 'Return', 'Return')) as return_status_count,
+		count(decode(record_status, 'Incomplete', 'Incomplete')) as
+		incomplete_status_count,
+		count(decode(record_status, 'Recovery', 'Recovery')) as recovery_status_count,
+		count(decode(record_status, 'Outsource', 'Outsource')) as
+		outsource_status_count,
+		count(decode(record_status, 'Received', 'Received')) as received_status_count,
+		count(decode(record_status, 'Undeliverable', 'Undeliverable')) as
+		undeliverable_status_count
+		from ecx.kaiser_ticket_paper_info
+		Where
+		PURCHASER_ID= #{value}	
+		GROUP BY RITS_JOB_NUMBER ORDER BY MAIL_DATE DESC
+	</select>
+
+
+</mapper>

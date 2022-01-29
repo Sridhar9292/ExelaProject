@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.EmailJobMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.EmailJob' id='EmailJobResult'>
+        <id property='jobNumber' column='JOB_NUMBER'/>
+        <result property='subaccountCode' column='SUBACCOUNT_CODE'/>
+        <result property='feedDocID' column='FEED_DOC_ID'/>
+        <result property='feedDttm' column='FEED_DTTM'/>
+        <result property='received' column='RECEIVED'/>
+        <result property='queued' column='QUEUED'/>
+        <result property='submitted' column='SUBMITTED'/>
+        <result property='errors' column='ERRORS'/>  
+         <result property='processed' column='PROCESSED'/>
+         <result property='deferred' column='DEFERRED'/>
+         <result property='delivered' column='DELIVERED'/>
+         <result property='open' column='OPEN'/>
+         <result property='bounced' column='BOUNCED'/>
+         <result property='dropped' column='DROPPED'/>
+    </resultMap>
+
+    <select id="search" resultMap="EmailJobResult" useCache="true">
+    	SELECT * FROM (SELECT EE.JOB_NUMBER,EE.FEED_DOC_ID, DF.FEED_DTTM,
+    	COUNT(distinct  EE.EMAIL_UUID)                                                  AS RECEIVED,
+       (select count(EMAIL_UUID) from ECX.ECX_EMAIL ee1 where ee1.FEED_DOC_ID = ee.FEED_DOC_ID  and  upper(ee1.EMAIL_STATUS)='QUEUED' )AS QUEUED,                       
+       (select count(EMAIL_UUID) from ECX.ECX_EMAIL ee1 where ee1.FEED_DOC_ID = ee.FEED_DOC_ID  and  upper(ee1.EMAIL_STATUS)='SUBMITTED' )AS SUBMITTED,
+       (select count(EMAIL_UUID) from ECX.ECX_EMAIL ee1 where ee1.FEED_DOC_ID = ee.FEED_DOC_ID  and  upper(ee1.EMAIL_STATUS) not in ('SUBMITTED','QUEUED' ))  AS ERRORS,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'PROCESSED',1,0 ))                             AS PROCESSED,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'DELIVERED',1,0 ))                             AS DELIVERED,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'DEFERRED',1,0 ))                              AS DEFERRED,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'OPEN',1,0 ))                                  AS OPEN,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'BOUNCE',1,0 ))                               AS BOUNCED,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'DROPPED',1,'SPAMREPORT',1,'UNSUBSCRIBE',1,0)) AS DROPPED
+  		FROM ECX.ECX_EMAIL EE		
+		LEFT OUTER JOIN ECX.ECX_EMAIL_SENDGRID_REPORT EESR ON EE.EMAIL_UUID =  EESR.EMAIL_UUID
+		INNER JOIN ECX.DATAFEED DF ON EE.FEED_DOC_ID =DF.FEED_DOC_ID		
+		WHERE upper(EE.JOB_NUMBER) LIKE upper(#{searchTerm})
+		<if test="filter != null and filter.size() > 0">
+			AND EE.SUBACCOUNT_CODE in
+			<foreach item="item" index="index" collection="filter" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+	</if>
+	GROUP BY EE.JOB_NUMBER,
+	EE.FEED_DOC_ID,
+	DF.FEED_DTTM
+	ORDER BY DF.FEED_DTTM DESC) WHERE <![CDATA[ ROWNUM <= 25 ]]>
+    </select>
+
+    <select id="getAll" resultMap="EmailJobResult" useCache="true">
+       	SELECT * FROM (SELECT EE.JOB_NUMBER,EE.FEED_DOC_ID, DF.FEED_DTTM,
+    	COUNT(distinct  EE.EMAIL_UUID)                                                                          AS RECEIVED,  
+      (select count(EMAIL_UUID) from ECX.ECX_EMAIL ee1 where ee1.FEED_DOC_ID = ee.FEED_DOC_ID  and  upper(ee1.EMAIL_STATUS)='QUEUED' )AS QUEUED,                       
+      (select count(EMAIL_UUID) from ECX.ECX_EMAIL ee1 where ee1.FEED_DOC_ID = ee.FEED_DOC_ID  and  upper(ee1.EMAIL_STATUS)='SUBMITTED' )AS SUBMITTED,
+       (select count(EMAIL_UUID) from ECX.ECX_EMAIL ee1 where ee1.FEED_DOC_ID = ee.FEED_DOC_ID  and  upper(ee1.EMAIL_STATUS) not in ('SUBMITTED','QUEUED' ))  AS ERRORS,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'PROCESSED',1,0 ))                             AS PROCESSED,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'DELIVERED',1,0 ))                             AS DELIVERED,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'DEFERRED',1,0 ))                              AS DEFERRED,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'OPEN',1,0 ))                                  AS OPEN,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'BOUNCE',1,0 ))                               AS BOUNCED,
+    	SUM(DECODE(UPPER(EESR.REPORT_TYPE),'DROPPED',1,'SPAMREPORT',1,'UNSUBSCRIBE',1,0)) AS DROPPED
+  		FROM ECX.ECX_EMAIL EE	
+		LEFT OUTER JOIN ECX.ECX_EMAIL_SENDGRID_REPORT EESR ON
+		EE.EMAIL_UUID=EESR.EMAIL_UUID
+		INNER JOIN ECX.DATAFEED DF ON EE.FEED_DOC_ID =DF.FEED_DOC_ID
+		<if test="filter != null and filter.size() > 0">
+			WHERE EE.SUBACCOUNT_CODE in
+			<foreach item="item" index="index" collection="filter"
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		GROUP BY EE.JOB_NUMBER, EE.FEED_DOC_ID, DF.FEED_DTTM
+		ORDER BY DF.FEED_DTTM DESC) WHERE <![CDATA[ ROWNUM <= 25 ]]>
+    </select>
+
+</mapper>

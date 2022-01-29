@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.BillerConfigMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.BillerConfig' id='BillerConfigResult'>
+        <id property='id.clientCode' column='CLIENT_CODE'/>
+        <id property='id.clientLobCode' column='CLIENT_LOB_CODE'/>
+        <result property='bcBillerCode' column='BC_BILLER_CODE'/>
+        <result property='bcBillerAlias' column='BC_BILLER_ALIAS'/>
+        <result property='bcBillerSite' column='BC_BILLER_SITE'/>
+        <result property='bcBillerName' column='BC_BILLER_NAME'/>
+        <result property='bcAccountingEnabled' column='BC_ACCOUNTING_ENABLED'/>
+        <result property='bcDelivery' column='BC_DELIVERY'/>
+        <result property='billerEnabled' column='BILLER_ENABLED'/>
+        <collection property='vendors' ofType='com.exelatech.ecxapi.model.Vendor' resultMap='VendorResult' />
+    </resultMap>
+
+    <resultMap type='com.exelatech.ecxapi.model.Vendor' id='VendorResult'>
+        <result property='vendorCode' column='VENDOR_CODE'/>
+        <result property='enabled' column='ACCOUNT_STATUS_ENABLED'/>
+    </resultMap>
+
+    <select id="search" resultMap="BillerConfigResult">
+        SELECT bc.*,
+        EBI.VENDOR_CODE,
+        EBI.ACCOUNT_STATUS_ENABLED
+        FROM ECX.biller_Config bc,
+        ECX.external_biller_ids ebi
+        WHERE BC.CLIENT_CODE   = EBI.CLIENT_CODE
+        AND BC.CLIENT_LOB_CODE = EBI.CLIENT_LOB_CODE
+        AND ((upper(bc.bc_biller_name) LIKE upper(#{searchTerm})
+        OR upper(bc.bc_delivery) LIKE upper(#{searchTerm})
+        OR upper(bc.bc_biller_code) LIKE (#{searchTerm})
+        OR upper(bc.client_code) LIKE upper(#{searchTerm})
+        OR upper(bc.client_lob_code) LIKE upper(#{searchTerm})))
+        <if test="filter != null and filter.size() > 0">
+            AND bc.client_code in
+            <foreach item="item" index="index" collection="filter" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY bc.client_code,
+        bc.client_lob_code,
+        ebi.vendor_code
+    </select>
+
+    <select id="getBillerConfigByclientCodeclientLobCode" resultMap="BillerConfigResult">
+        SELECT bc.*,
+        EBI.VENDOR_CODE,
+        EBI.ACCOUNT_STATUS_ENABLED
+        FROM ECX.biller_Config bc,
+        ECX.external_biller_ids ebi
+        WHERE BC.CLIENT_CODE   = EBI.CLIENT_CODE
+        AND BC.CLIENT_LOB_CODE = EBI.CLIENT_LOB_CODE
+        AND bc.CLIENT_CODE     = #{clientCode}
+        AND bc.CLIENT_LOB_CODE = #{clientLobCode}
+        <!-- <if test="filter != null and filter.size() > 0">
+            AND bc.client_code in
+            <foreach item="item" index="index" collection="filter" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if> -->
+        ORDER BY bc.client_code,
+        bc.client_lob_code,
+        ebi.vendor_code
+    </select>
+
+    <select id="getAll" resultMap="BillerConfigResult">
+        SELECT bc.*,
+        EBI.VENDOR_CODE,
+        EBI.ACCOUNT_STATUS_ENABLED
+        FROM ECX.biller_Config bc,
+        ECX.external_biller_ids ebi
+        WHERE BC.CLIENT_CODE   = EBI.CLIENT_CODE
+        AND BC.CLIENT_LOB_CODE = EBI.CLIENT_LOB_CODE
+        <if test="filter != null and filter.size() > 0">
+            AND bc.client_code in
+            <foreach item="item" index="index" collection="filter" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY bc.client_code,
+        bc.client_lob_code,
+        ebi.vendor_code
+    </select>
+</mapper>

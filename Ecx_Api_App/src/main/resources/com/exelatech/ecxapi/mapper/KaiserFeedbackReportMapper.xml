@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace='com.exelatech.ecxapi.mapper.KaiserFeedbackReportMapper'>
+
+	<resultMap
+		type='com.exelatech.ecxapi.model.KaiserFeedbackReport' id='kaiserFeedbackReports'>
+		<result property='id' column='ID' />
+		<result property="reportName" column='REPORT_NAME' />
+		<result property='generatedTime' column='GENERATED_TIME' />
+		<result property='status' column='STATUS' />
+		<result property='doneTime' column='DONE_TIME' />
+		<result property='orderId' column='ORDER_ID' />
+	</resultMap>
+	
+	<select id="getAll" resultMap="kaiserFeedbackReports">
+		SELECT * FROM ECX.KAISER_FEEDBACK_REPORT order BY GENERATED_TIME DESC fetch first 500 rows only
+	</select>
+	
+	<select id="getDetailsUsingDate" resultMap="kaiserFeedbackReports">
+		SELECT * FROM ECX.KAISER_FEEDBACK_REPORT WHERE TO_CHAR(GENERATED_TIME,'DDMMYYYY') = #{param1, jdbcType=VARCHAR}
+	</select>
+	
+	
+	
+	
+	<select id="getByReportName" resultMap="kaiserFeedbackReports">
+		SELECT * FROM ECX.KAISER_FEEDBACK_REPORT where REPORT_NAME = #{param1, jdbcType=VARCHAR}
+	</select>
+	
+	<select id="getByStatus" resultMap="kaiserFeedbackReports">
+		SELECT * FROM ECX.KAISER_FEEDBACK_REPORT where STATUS = #{param1, jdbcType=VARCHAR}
+	</select>
+   
+</mapper>

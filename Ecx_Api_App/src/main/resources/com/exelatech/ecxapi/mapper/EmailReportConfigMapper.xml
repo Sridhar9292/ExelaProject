@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.EmailReportConfigMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.EmailReportConfig' id='EmailReportConfigResult'>
+        <id property='subaccountCode' column='SUBACCOUNT_CODE'/>
+        <result property='emailReportType' column='EMAIL_REPORT_TYPE'/>
+        <result property='emailReportNamingPattern' column='EMAIL_REPORT_NAMING_PATTERN'/>
+        <result property='emailReportPath' column='EMAIL_REPORT_PATH'/>
+        <result property='generateReportIfEmpty' column='GENERATE_REPORT_IF_EMPTY'/>
+        <result property='exportEnabled' column='EXPORT_ENABLED'/>
+        <result property='lastImportedOn' column='LAST_IMPORTED_ON'/>
+        <result property='lastExportedOn' column='LAST_EXPORTED_ON'/>
+        <result property='entryDate' column='ENTRY_DATE'/>
+        <result property='modifyDate' column='MODIFY_DATE'/>
+        <result property='userAbbrev' column='USER_ABBREV'/>
+        <result property='count' column='count'/>
+    </resultMap>
+
+    <select id="search" resultMap="EmailReportConfigResult">
+        SELECT eerc.*
+        FROM ECX.ecx_email_report_config eerc
+        WHERE eerc.SUBACCOUNT_CODE = #{param1}
+        AND eerc.EMAIL_REPORT_TYPE LIKE #{param2}
+        ORDER BY eerc.SUBACCOUNT_CODE, eerc.EMAIL_REPORT_TYPE
+    </select>
+
+    <select id="get" resultMap="EmailReportConfigResult">
+        SELECT eerc.*
+        FROM ECX.ecx_email_report_config eerc
+        WHERE eerc.SUBACCOUNT_CODE = #{param1}
+        AND eerc.EMAIL_REPORT_TYPE = #{param2}
+        ORDER BY eerc.SUBACCOUNT_CODE, eerc.EMAIL_REPORT_TYPE
+    </select>
+
+    <select id="getAll" resultMap="EmailReportConfigResult">
+        SELECT eerc.*
+        FROM ECX.ecx_email_report_config eerc
+        WHERE eerc.SUBACCOUNT_CODE = #{param1}
+        ORDER BY eerc.SUBACCOUNT_CODE, eerc.EMAIL_REPORT_TYPE
+    </select>
+
+    <select id="exists" resultMap="EmailReportConfigResult">
+        SELECT count(1) as count
+        from ECX.ecx_email_report_config
+        WHERE SUBACCOUNT_CODE = #{param1}
+        AND EMAIL_REPORT_TYPE= #{param2}
+    </select>
+
+    <insert id="insert" parameterType="com.exelatech.ecxapi.model.EmailReportConfig">
+        INSERT
+        INTO ECX.ECX_EMAIL_REPORT_CONFIG
+        (
+        SUBACCOUNT_CODE,
+        EMAIL_REPORT_TYPE,
+        EMAIL_REPORT_NAMING_PATTERN,
+        EMAIL_REPORT_PATH,
+        GENERATE_REPORT_IF_EMPTY,
+        EXPORT_ENABLED
+        )
+        VALUES
+        (
+        #{subaccountCode ,jdbcType=VARCHAR},
+        #{emailReportType ,jdbcType=VARCHAR},
+        #{emailReportNamingPattern ,jdbcType=VARCHAR},
+        #{emailReportPath ,jdbcType=VARCHAR},
+        #{generateReportIfEmpty ,jdbcType=VARCHAR},
+        #{exportEnabled ,jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <insert id="update" parameterType="com.exelatech.ecxapi.model.EmailReportConfig">
+        UPDATE ECX.ECX_EMAIL_REPORT_CONFIG
+        SET
+        EMAIL_REPORT_NAMING_PATTERN=#{emailReportNamingPattern ,jdbcType=VARCHAR},
+        EMAIL_REPORT_PATH=#{emailReportPath ,jdbcType=VARCHAR},
+        GENERATE_REPORT_IF_EMPTY=#{generateReportIfEmpty ,jdbcType=VARCHAR},
+        EXPORT_ENABLED=#{exportEnabled ,jdbcType=VARCHAR}
+        WHERE
+        SUBACCOUNT_CODE=#{subaccountCode}
+        AND EMAIL_REPORT_TYPE=#{emailReportType}
+    </insert>
+
+    <delete id="remove" parameterType="com.exelatech.ecxapi.model.EmailReportConfig">
+        DELETE FROM ECX.ECX_EMAIL_REPORT_CONFIG
+        WHERE SUBACCOUNT_CODE=#{subaccountCode}
+        AND EMAIL_REPORT_TYPE=#{emailReportType}
+    </delete>
+
+    <delete id="removeBySubaccountCode" parameterType="String" >
+        DELETE FROM ECX.ECX_EMAIL_REPORT_CONFIG
+        WHERE SUBACCOUNT_CODE=#{subaccountCode}
+    </delete>
+
+</mapper>

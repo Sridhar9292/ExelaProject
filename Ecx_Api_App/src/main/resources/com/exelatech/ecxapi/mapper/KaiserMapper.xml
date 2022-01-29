@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.KaiserMapper'>
+
+
+ <resultMap type='com.exelatech.ecxapi.model.KaiserProcessInfo' id='KaiserProcessResult'>
+        <id property='infoId' column='KAISER_PROCESS_INFO_ID'/>
+        <result property='collectionDate' column='COLLECTION_DATE'/>
+        <result property='directories' column='PROCESSED_DIRECTORIES'/>
+        <result property='combinedRun' column='COMBINED_RUN'/>
+        <result property='webUnits' column='WEB_UNITS'/>
+        <result property='paperUnits' column='PAPER_UNITS'/>
+        <result property='sentToDps' column='SENT_TO_DPS'/>
+        <result property='dpsJob' column='DPS_JOB'/>     
+        <result property='error' column='ERROR'/>
+        <result property='dirError' column='DIRERROR'/>
+        <result property='present' column='PRESENT'/>
+      </resultMap>
+
+    <select id="getKaiProcessInfo" resultMap="KaiserProcessResult">
+        (
+        
+        SELECT
+    kaiser_process_info_id,
+    present,
+    collection_date,
+    processed_directories,
+    combined_run,
+    web_units,
+    paper_units,
+    sent_to_dps,
+    dps_job,
+    COUNT(error) AS error,
+    COUNT(direrror) AS direrror
+FROM
+    (
+        SELECT DISTINCT
+            info.kaiser_process_info_id        kaiser_process_info_id,
+            CASE substr(dir.dir_name, 0, 2)
+                WHEN 'CS' THEN
+                    1
+                ELSE
+                    0
+            END AS present,
+            to_char(info.collection_date, 'YYYY-MM-DD HH24:MI:SS') collection_date,
+            processed_directories,
+            combined_run,
+            web_units,
+            paper_units,
+            to_char(sent_to_dps, 'YYYY-MM-DD HH24:MI:SS') sent_to_dps,
+            dps_job,
+            process.kaiser_process_status_id   AS error,
+            dir.kaiser_process_dir_id          AS direrror
+        FROM
+            ecx.kaiser_process_info        info
+            LEFT JOIN ecx.kaiser_process_directory   dir ON info.kaiser_process_info_id = dir.kaiser_process_info_id
+            LEFT JOIN ecx.kaiser_csc_xml_info        xml ON dir.dir_name = xml.out_dir_name
+            LEFT JOIN ecx.kaiser_process_status      process ON process.kaiser_process_info_id = info.kaiser_process_info_id
+                                                           AND ( ( process_status LIKE '%File Rejected%' )
+                                                                 OR ( process_status LIKE '%Significant%' ) )
+            LEFT JOIN ecx.kaiser_process_directory   dir ON dir.kaiser_process_info_id = info.kaiser_process_info_id
+                                                          AND dir.dir_process_status = 'REJECTED'
+    )
+GROUP BY
+    kaiser_process_info_id,
+    present,
+    collection_date,
+    processed_directories,
+    combined_run,
+    web_units,
+    paper_units,
+    sent_to_dps,
+    dps_job
+    
+    
+		UNION ALL
+		    SELECT  to_char(KAISER_CSC_XML_INFO_ID)  KAISER_PROCESS_INFO_ID,1 as PRESENT,
+			to_char(entry_date,'YYYY-MM-DD HH24:MI:SS') COLLECTION_DATE,
+			'0' as 	PROCESSED_DIRECTORIES,
+			'Y' as COMBINED_RUN,
+			'0'	as WEB_UNITS,
+			'0'	as PAPER_UNITS,
+        	 '' as SENT_TO_DPS,
+       		 '' as	DPS_JOB,
+             1 as ERROR,
+             0 as DIRERROR
+      FROM ECX.KAISER_CSC_XML_INFO Where 
+      STATUS = 'Error')
+	  
+		order by COLLECTION_DATE desc FETCH FIRST 10 PERCENT ROWS ONLY
+    </select>
+    
+     <resultMap type='com.exelatech.ecxapi.model.KaiserStatus' id='KaiserStatusResult'>
+        <id property='infoId' column='KAISER_PROCESS_INFO_ID'/>
+        <result property='statusId' column='KAISER_PROCESS_STATUS_ID'/>
+        <result property='processDate' column='PROCESS_DATE'/>
+        <result property='status' column='PROCESS_STATUS'/>
+        <result property='entryDate' column='ENTERY_DATE'/>
+        <result property='modDate' column='MODIFIED_DATE'/>
+        <result property='userAbberv' column='USER_ABBERV'/>
+      </resultMap>
+	<resultMap type='com.exelatech.ecxapi.model.KaiserDirectories' id='KaiserDirectory'>
+		<result property='directoryName' column='DIR_NAME' />
+		<result property='collectionDate' column='COLLECTION_DATE' />
+		<result property='directoryStatus' column='DIR_PROCESS_STATUS' />
+		
+	</resultMap>
+
+    <select id="getKaiProcessStatus" resultMap="KaiserStatusResult">
+        select  KAISER_PROCESS_STATUS_ID,
+      		    KAISER_PROCESS_INFO_ID,
+      		    to_char(PROCESS_DATE,'YYYY-MM-DD HH24:MI:SS') AS PROCESS_DATE,
+      			PROCESS_STATUS     
+        from ECX.KAISER_PROCESS_STATUS WHERE KAISER_PROCESS_INFO_ID = #{infoId} order by PROCESS_DATE
+    </select>
+    
+    
+        <select id="getKaiProcessInfoSearch" resultMap="KaiserProcessResult">
+       select DISTINCT INFO.KAISER_PROCESS_INFO_ID KAISER_PROCESS_INFO_ID,  
+        CASE SUBSTR(dir.DIR_NAME,0, 2)
+    	WHEN 'CS'
+    	THEN 1
+    	ELSE 0
+  		END AS PRESENT,    	
+      		    to_char(NVL(entry_date, COLLECTION_DATE),'YYYY-MM-DD HH24:MI:SS') COLLECTION_DATE,
+       			PROCESSED_DIRECTORIES,
+       			COMBINED_RUN,
+       			WEB_UNITS,
+       			PAPER_UNITS,
+       			to_CHAR(SENT_TO_DPS,'YYYY-MM-DD HH24:MI:SS') SENT_TO_DPS,
+       			DPS_JOB,             
+       			 ( select count(*) as error From  ECX.KAISER_PROCESS_STATUS PROCESS
+				where PROCESS.KAISER_PROCESS_INFO_ID =INFO.KAISER_PROCESS_INFO_ID  and
+				((PROCESS_STATUS like '%File Rejected%')   or  
+				(PROCESS_STATUS like '%Significant%')) ) AS ERROR ,
+ 				(select count(*) as error  From ECX.KAISER_PROCESS_DIRECTORY   DIR where 
+				DIR.KAISER_PROCESS_INFO_ID = INFO.KAISER_PROCESS_INFO_ID AND
+				DIR_PROCESS_STATUS = 'REJECTED') as DIRERROR      			         
+        from ECX.KAISER_PROCESS_INFO INFO 
+        LEFT JOIN ECX.KAISER_PROCESS_DIRECTORY DIR
+		ON INFO.KAISER_PROCESS_INFO_ID = DIR.KAISER_PROCESS_INFO_ID
+		LEFT JOIN ECX.KAISER_CSC_XML_INFO XML
+		ON DIR.DIR_NAME = XML.OUT_DIR_NAME  WHERE INFO.KAISER_PROCESS_INFO_ID IN   
+             <if test="condition!='contract'">      
+           (	SELECT KAISER_PROCESS_INFO_ID FROM ECX.KAISER_PROCESS_INFO_SEARCH 
+ 			     WHERE  upper(${condition}) LIKE upper(#{searchTerm}))  </if> 
+ 			 <if test="condition =='contract'">  
+ 			 ( Select KAISER_PROCESS_INFO_ID from ( SELECT 
+ 			 KAISER_PROCESS_INFO_ID,ECX.PURCHASER_ID||'-'||ECX.CONTRACT_ID||'-'||ECX.VERSION_NUMBER AS CONTRACT  
+ 			 FROM ECX.KAISER_PROCESS_INFO_SEARCH ECX ) 
+ 			 where  CONTRACT like #{searchTerm})
+ 			 </if>  
+   
+        </select>
+        
+          <select id="getKaiProcessInfoSearchJob" resultMap="KaiserProcessResult">
+       select KAISER_PROCESS_INFO_ID,      	
+          to_char(COLLECTION_DATE,'YYYY-MM-DD HH24:MI:SS') COLLECTION_DATE,
+       			PROCESSED_DIRECTORIES,
+       			COMBINED_RUN,
+       			WEB_UNITS,
+       			PAPER_UNITS,
+       			to_CHAR(SENT_TO_DPS,'YYYY-MM-DD HH24:MI:SS') SENT_TO_DPS,
+       			DPS_JOB,
+                ( select count(*) as error From  ECX.KAISER_PROCESS_STATUS PROCESS
+				where PROCESS.KAISER_PROCESS_INFO_ID =INFO.KAISER_PROCESS_INFO_ID  and
+				((PROCESS_STATUS like '%File Rejected%')   or  
+				(PROCESS_STATUS like '%Significant%')) ) AS ERROR ,
+ 				(select count(*) as error  From ECX.KAISER_PROCESS_DIRECTORY   DIR where 
+				DIR.KAISER_PROCESS_INFO_ID = INFO.KAISER_PROCESS_INFO_ID AND
+				DIR_PROCESS_STATUS = 'REJECTED') as DIRERROR        
+          from ECX.KAISER_PROCESS_INFO  INFO
+               WHERE  upper(DPS_JOB) LIKE upper(#{searchTerm})        
+        </select>
+	<select id="getKaiProcessDirectories" resultMap="KaiserDirectory">
+		select COLLECTION_DATE,DIR_NAME,DIR_PROCESS_STATUS from ECX.KAISER_PROCESS_INFO
+		inner join ECX.KAISER_PROCESS_DIRECTORY ON
+		KAISER_PROCESS_INFO.KAISER_PROCESS_INFO_ID=KAISER_PROCESS_DIRECTORY.KAISER_PROCESS_INFO_ID
+		WHERE
+		KAISER_PROCESS_DIRECTORY.KAISER_PROCESS_INFO_ID=#{directory} order by DIR_NAME
+	</select>
+   <resultMap type='com.exelatech.ecxapi.model.RejectStatus' id='KaiErrorStatusFileResult'>
+        <id property='processInfoId' column='KAISER_PROCESS_INFO_ID'/>
+        <result property='processStatusId' column='KAISER_PROCESS_STATUS_ID'/> 
+        <result property='dirName' column='DIRNAME'/>
+        <result property='fileName' column='FILENAME'/>    
+        <result property='status' column='PROCESS_STATUS'/>     
+      </resultMap>
+
+    <select id="getKaiErrorStatusFile" resultMap="KaiErrorStatusFileResult">
+        select  KAISER_PROCESS_STATUS_ID,
+      		    KAISER_PROCESS_INFO_ID,      		   
+      			PROCESS_STATUS,
+      			substr(trim(PROCESS_STATUS),90,16) DIRNAME,
+      			substr(trim(PROCESS_STATUS),51,21) FILENAME,
+      			trim(PROCESS_STATUS) PROCESS_STATUS                 
+        from ECX.KAISER_PROCESS_STATUS WHERE KAISER_PROCESS_INFO_ID = #{infoId} 
+        and PROCESS_STATUS like '%File Rejected%'           
+    </select>
+    
+     <resultMap type='com.exelatech.ecxapi.model.RejectStatus' id='KaiErrorStatusRecordResult'>
+        <id property='processInfoId' column='KAISER_PROCESS_INFO_ID'/>
+        <result property='processStatusId' column='KAISER_PROCESS_STATUS_ID'/> 
+        <result property='dirName' column='DIRNAME'/>
+        <result property='purchaserId' column='PURCHASERID'/>   
+        <result property='contractId' column='CONTRACT_ID'/> 
+        <result property='versionNumber' column='VERSIONNUMBER'/> 
+        <result property='recipientType' column='RECIPIENTTYPE'/> 
+        <result property='name' column='NAME'/> 
+        <result property='fileName' column='FILENAME'/>  
+        <result property='status' column='PROCESS_STATUS'/>     
+      </resultMap>
+     <select id="getKaiErrorStatusRecord" resultMap="KaiErrorStatusRecordResult">
+        select  KAISER_PROCESS_STATUS_ID,
+      		    KAISER_PROCESS_INFO_ID,      		   
+      			substr(trim(PROCESS_STATUS),95,16) DIRNAME,
+				substr(trim(PROCESS_STATUS),60,21) FILENAME,
+				substr(trim(PROCESS_STATUS),60,9) PURCHASERID,
+				substr(trim(PROCESS_STATUS),70,3) CONTRACT_ID, 
+				substr(trim(PROCESS_STATUS),74,3) VERSIONNUMBER, 
+				substr(trim(PROCESS_STATUS),178,10) RECIPIENTTYPE, 
+				substr(trim(PROCESS_STATUS),188) NAME,
+				substr(trim(PROCESS_STATUS),1,177) PROCESS_STATUS                   
+        from ECX.KAISER_PROCESS_STATUS WHERE KAISER_PROCESS_INFO_ID = #{infoId} 
+        and PROCESS_STATUS like '%Significant%'         
+    </select>
+    
+     <select id="getKaiRejDirList" resultType="String">
+       	SELECT DIR_NAME FROM ECX.KAISER_PROCESS_DIRECTORY WHERE 
+				KAISER_PROCESS_INFO_ID = #{infoId} AND
+				DIR_PROCESS_STATUS = 'REJECTED'
+     </select>
+	 
+	   <select id="getKaiRejXMLList" resultType="String">
+       	SELECT INPUT_FILE_NAME  FROM ECX.KAISER_CSC_XML_PROCESS_INFO WHERE 
+				KAISER_CSC_XML_INFO_ID  = #{infoId} AND
+				DESCRIPTION LIKE '%failed%'
+     </select>
+	 
+</mapper>

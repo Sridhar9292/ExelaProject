@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.PrintAppCodesMapper'>
+	<resultMap type='com.exelatech.ecxapi.model.PrintAppCodes' id='PrintAppCodesResult'>
+	    <id property='rowid' column='rowid'/>
+	    <result property='appCode' column='APP_CODE'/>
+	    <result property='appCodeType' column='APP_CODE_TYPE'/>
+	    <result property='effectiveDate' column='EFFECTIVE_DATE' jdbcType="DATE" javaType="java.util.Date" />
+	    <result property='count' column='count'/>
+	</resultMap>
+	
+	<select id="search" resultMap="PrintAppCodesResult">
+	    SELECT APP_CODE_TYPE, APP_CODE, EFFECTIVE_DATE
+	    FROM ECX.PRINT_APP_CODE
+	    WHERE APP_CODE_TYPE = upper(#{appCodeType})
+	    AND upper(APP_CODE) LIKE upper(#{searchTerm})
+	    ORDER BY APP_CODE
+	</select>
+	
+	<select id="get" resultMap="PrintAppCodesResult">
+	    SELECT rowid, APP_CODE_TYPE, APP_CODE, EFFECTIVE_DATE
+	    FROM ECX.PRINT_APP_CODE
+	    WHERE APP_CODE_TYPE = upper(#{appCodeType})
+	    AND APP_CODE = #{appCode}
+	</select>
+	
+	<select id="getAll" resultMap="PrintAppCodesResult">
+	    SELECT rowid, APP_CODE_TYPE, APP_CODE, EFFECTIVE_DATE
+	    FROM ECX.PRINT_APP_CODE
+	    WHERE APP_CODE_TYPE = upper(#{appCodeType})
+	    ORDER BY APP_CODE
+	</select>
+	
+	
+	<select id="getAllAppcode" resultMap="PrintAppCodesResult">
+	    SELECT rowid, APP_CODE_TYPE, APP_CODE, EFFECTIVE_DATE
+	    FROM ECX.PRINT_APP_CODE
+	    ORDER BY APP_CODE_TYPE
+	</select>
+	
+	<select id="exists" resultMap="PrintAppCodesResult">
+	    SELECT count(1) as count
+	    from ECX.PRINT_APP_CODE
+	    WHERE rowid = #{rowid}
+	</select>
+	
+	<insert id="insert" parameterType="com.exelatech.ecxapi.model.PrintAppCodes">
+	    INSERT
+	    INTO ECX.PRINT_APP_CODE
+	    (
+	    APP_CODE_TYPE,
+	    APP_CODE,
+	    EFFECTIVE_DATE
+	    )
+	    VALUES
+	    (
+	    #{appCodeType},
+	    #{appCode},
+	    #{effectiveDate:DATE}
+	    )
+	</insert>
+	
+	<insert id="update" parameterType="com.exelatech.ecxapi.model.PrintAppCodes">
+	    UPDATE ECX.PRINT_APP_CODE
+	    SET APP_CODE_TYPE=#{appCodeType},
+	        APP_CODE=#{appCode},
+	        EFFECTIVE_DATE=#{effectiveDate:DATE}
+	    WHERE rowid=#{rowid}
+	</insert>
+	<delete id="remove" parameterType="com.exelatech.ecxapi.model.PrintAppCodes">
+	    DELETE FROM ECX.PRINT_APP_CODE
+	    WHERE APP_CODE_TYPE = upper(#{appCodeType})
+	    AND APP_CODE = #{appCode}
+	</delete>
+</mapper>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecxapi.mapper.UserMapper'>
+    <resultMap type='com.exelatech.ecxapi.model.User' id='UserResult'>
+        <result property='username' column='USERNAME'/>
+        <result property='password' column='PASSWORD'/>
+        <result property='email' column='EMAIL'/>
+        <result property='firstName' column='FIRST_NAME'/>
+        <result property='lastName' column='LAST_NAME'/>
+        <result property='version' column='VERSION'/>
+        <result property='landingPage' column='LANDING_PAGE'/>
+        <result property='enabled' column='ACCOUNT_ENABLED' javaType='boolean' typeHandler="org.apache.ibatis.type.BooleanTypeHandler"/>
+        <result property='accountExpired' column='ACCOUNT_EXPIRED' javaType='boolean' typeHandler="org.apache.ibatis.type.BooleanTypeHandler"/>
+        <result property='credentialsExpired' column='CREDENTIALS_EXPIRED' javaType='boolean' typeHandler="org.apache.ibatis.type.BooleanTypeHandler"/>
+        <result property='accountLocked' column='ACCOUNT_LOCKED' javaType='boolean' typeHandler="org.apache.ibatis.type.BooleanTypeHandler"/>
+        <collection property='roles' ofType='com.exelatech.ecxapi.model.Role' resultMap='RoleResult' />
+        <collection property='permissions' ofType='com.exelatech.ecxapi.model.Permission' resultMap='PermissionResult' />
+    </resultMap>
+
+    <resultMap type='com.exelatech.ecxapi.model.Role' id='RoleResult'>
+        <result property='rolename' column='ROLENAME'/>
+        <result property='description' column='DESCRIPTION'/>
+        <result property='selected' column='SELECTED'/>
+        <collection property='permissions' ofType='com.exelatech.ecxapi.model.Permission' resultMap='PermissionResult' />
+    </resultMap>
+
+    <resultMap type='com.exelatech.ecxapi.model.Permission' id='PermissionResult'>
+        <result property='permissionName' column='PERMISSION_NAME'/>
+        <result property='description' column='DESCRIPTION'/>
+    </resultMap>
+
+    <resultMap type='com.exelatech.ecxapi.model.LabelValue' id='UserFilterResult'>
+        <result property='label' column='FILTER_TYPE'/>
+        <result property='value' column='FILTER_VALUE'/>
+    </resultMap>
+
+    <select id="getAll" resultMap="UserResult">
+         select u.*,r.*,p.* 
+		   from  ECX.app_user u 
+				left join  ECX.user_role  ur
+				on(upper(u.username) = upper(ur.username))
+				left join ECX.role r
+				on(upper(r.ROLENAME) = upper(ur.ROLENAME))
+				 left join  ECX.role_permission rp
+				on(upper(r.ROLENAME) = upper(rp.ROLE_NAME) )
+				left join   ECX.permission p
+				on upper(p.PERMISSION_NAME) = upper(rp.PERMISSION_NAME) 
+        order by u.username
+    </select>
+
+    <select id="getAllDistinct" resultMap="UserResult">
+        select u.*, r.* from ECX.app_user u, ECX.user_role ur, ECX.role r where u.username = ur.username and ur.rolename = r.rolename
+    </select>
+
+    <select id="search" resultMap="UserResult">
+ <!--        select u.*, r.* from ECX.app_user u, ECX.user_role ur, ECX.role r where u.username = ur.username and ur.rolename = r.rolename and upper(u.username) like upper(#{searchTerm}) -->
+    select u.*,r.*,p.* 
+		   from  ECX.app_user u 
+				left join  ECX.user_role  ur
+				on(upper(u.username) = upper(ur.username))
+				left join ECX.role r
+				on(upper(r.ROLENAME) = upper(ur.ROLENAME))
+				 left join  ECX.role_permission rp
+				on(upper(r.ROLENAME) = upper(rp.ROLE_NAME) )
+				left join   ECX.permission p
+				on upper(p.PERMISSION_NAME) = upper(rp.PERMISSION_NAME) 
+		where  upper(u.username) like upper(#{searchTerm}) 
+    </select>
+
+    <select id="get" resultMap="UserResult">
+       <!--  select u.* from ECX.app_user u where u.username = #{username} -->
+  select u.*,r.*,p.* 
+		   from  ECX.app_user u 
+				left join  ECX.user_role  ur
+				on(upper(u.username) = upper(ur.username))
+				left join ECX.role r
+				on(upper(r.ROLENAME) = upper(ur.ROLENAME))
+				 left join  ECX.role_permission rp
+				on(upper(r.ROLENAME) = upper(rp.ROLE_NAME) )
+				left join   ECX.permission p
+				on upper(p.PERMISSION_NAME) = upper(rp.PERMISSION_NAME) 
+		where upper(u.username) = upper(#{username})        
+    </select>
+
+    <select id="appUserExists" resultType="boolean">
+        select CASE WHEN count(1) > 0 THEN 1 /*true*/ ELSE 0 /*false*/ END from ECX.app_user u where upper(u.username) = upper(#{username})
+    </select>
+    
+     <select id="userAccEnableCheck" resultType="boolean">
+        select CASE WHEN count(1) > 0 THEN 1 /*true*/ ELSE 0 /*false*/ END from ECX.app_user u where upper(u.username) = upper(#{username}) 
+		and u.ACCOUNT_ENABLED != 0
+    </select>
+    
+    <insert id="insert" parameterType="com.exelatech.ecxapi.model.User">
+        insert into ECX.app_user(username, account_enabled, account_expired, account_locked, credentials_expired, first_name, last_name, email, password, landing_page) values (#{username}, #{enabled ,jdbcType=VARCHAR}, #{accountExpired ,jdbcType=VARCHAR}, #{accountLocked}, #{credentialsExpired}, #{firstName ,jdbcType=VARCHAR}, #{lastName ,jdbcType=VARCHAR}, #{email ,jdbcType=VARCHAR}, #{password ,jdbcType=VARCHAR}, #{landingPage ,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="update" parameterType="com.exelatech.ecxapi.model.User">
+        update ECX.app_user u set u.account_enabled=#{enabled ,jdbcType=VARCHAR}, u.first_name=#{firstName ,jdbcType=VARCHAR}, u.last_name=#{lastName ,jdbcType=VARCHAR}, u.email=#{email ,jdbcType=VARCHAR}, u.password=#{password ,jdbcType=VARCHAR}, u.landing_page=#{landingPage ,jdbcType=VARCHAR} where u.username=#{username}
+    </update>
+
+    <insert id="addUserRoles" parameterType="java.util.List" > <!-- parameterType="com.exelatech.ecxapi.model.User"> -->
+        INSERT ALL
+        <foreach collection="roles" item="role" index="index" >
+             into ECX.user_role (username, rolename) values (#{username}, #{role.rolename})
+        </foreach>
+        SELECT 1 from DUAL 
+    </insert>
+
+    <delete id="deleteUserRoles" parameterType="com.exelatech.ecxapi.model.User">
+        DELETE FROM ECX.user_role where username=#{username}
+    </delete>
+
+   <!--  <select id="loadUserByUsername" resultMap="UserResult">
+        select u.* from ECX.app_user u where upper(u.username) = upper(#{username}) and u.account_enabled=1
+    </select> -->
+    
+    <select id="loadUserByUsername" resultMap="UserResult">
+		  select SUBSTR(u.username,1,20) username,u.password,u.first_name,u.last_name,u.email,u.account_expired,u.account_locked,u.credentials_expired,u.account_enabled,u.version,u.landing_page,
+u.notes,r.*,p.* 
+		   from  ECX.app_user u 
+				left join  ECX.user_role  ur
+				on(upper(u.username) = upper(ur.username))
+				left join ECX.role r
+				on(upper(r.ROLENAME) = upper(ur.ROLENAME))
+				 left join  ECX.role_permission rp
+				on(upper(r.ROLENAME) = upper(rp.ROLE_NAME) )
+				left join   ECX.permission p
+				on upper(p.PERMISSION_NAME) = upper(rp.PERMISSION_NAME) 
+		where upper(SUBSTR(u.username,1,20)) = upper(#{username}) 
+		and u.ACCOUNT_ENABLED != 0
+    </select>
+    
+
+    <select id="loadPermissionsByUsername" resultMap="PermissionResult">
+        select distinct p.permission_name from ECX.app_user u, ECX.user_role ur, ECX.role r, ECX.role_permission rp, ECX.permission p where u.username = ur.username and ur.rolename = r.rolename and r.rolename = rp.role_name AND p.permission_name like replace(rp.permission_name,'*','%') AND p.permission_name not like '%*%' and upper(u.username) = upper(#{username}) and u.account_enabled=1
+    </select>
+
+    <select id="loadPermissionsByRolename" resultMap="PermissionResult">
+        select distinct p.permission_name from ECX.role r, ECX.role_permission rp, ECX.permission p where r.rolename = rp.role_name AND p.permission_name like replace(rp.permission_name,'*','%') AND p.permission_name not like '%*%' and upper(r.rolename) = upper(#{rolename})
+    </select>
+
+    <select id="getUserPassword" resultType="String">
+        select u.password from ECX.app_user u where u.username = #{username}
+    </select>
+    
+    <select id="getLandingPage" resultType="String">
+        select u.LANDING_PAGE from ECX.app_user u where u.username = #{username}
+    </select>
+
+    <delete id="remove" parameterType="com.exelatech.ecxapi.model.User">
+        delete from ECX.app_user u where upper(u.username)=upper(#{username})
+    </delete>
+
+    <select id="loadPermissionsByRole" resultMap="PermissionResult">
+        select p.* from ECX.role r, ECX.role_permission rp, ECX.permission p where u.username = ur.username and ur.rolename = r.rolename and r.rolename = rp.role_name and rp.permission_name = p.permission_name and upper(u.username) = upper(#{username}) and u.account_enabled=1
+    </select>
+
+    <select id="getAllRolesWithSelectionForUser" resultMap="RoleResult">
+        SELECT r.*,
+            p.*,
+            1 AS selected,
+            r.rolename as role
+        FROM ECX.app_user u,
+            ECX.user_role ur,
+            ECX.role r,
+            ECX.role_permission rp,
+            ECX.permission p
+        WHERE u.username     = ur.username
+            AND ur.rolename      = r.rolename
+            AND r.rolename       =rp.role_name
+            AND rp.permission_name=p.permission_name
+            AND u.username       = #{username}
+        union all
+        SELECT r.*,
+            p.*,
+            0 AS selected,
+            r.rolename as role
+        FROM ECX.role r,
+            ECX.role_permission rp,
+            ECX.permission p
+        WHERE r.rolename       =rp.role_name
+            AND rp.permission_name=p.permission_name
+            and r.rolename not in (SELECT ur.rolename
+            FROM ECX.app_user u,
+                ECX.user_role ur
+            WHERE u.username     = ur.username
+            AND u.username       = #{username})
+        order by selected desc, role
+    </select>
+
+    <select id="getUserFilter" resultMap="UserFilterResult">
+        select u.FILTER_TYPE, u.FILTER_VALUE from ECX.user_data_filter u where u.username = #{username}
+    </select>
+
+    <select id="getRolesByUser" resultMap="RoleResult">
+        select ur.ROLENAME from ECX.user_role ur where ur.username = #{username}
+    </select>
+    
+     <insert id="insertAnonymousRegister" parameterType="com.exelatech.ecxapi.model.User">
+        Insert into ecx.app_user(username, account_expired, account_locked, credentials_expired, account_enabled, first_name, last_name, email, notes) values(#{username,jdbcType=VARCHAR}, 0, 1, 0, 0, #{firstName,jdbcType=VARCHAR}, #{lastName,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, #{notes,jdbcType=VARCHAR})
+    </insert>
+    
+</mapper>
