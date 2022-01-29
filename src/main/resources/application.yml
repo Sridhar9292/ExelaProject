@@ -1,0 +1,13 @@
+server.port: 8086
+management.security.enabled: false
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: hawtio,jolokia
+
+hawtio:
+    authenticationEnabled: false
+    
+
