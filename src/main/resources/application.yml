@@ -1,0 +1,66 @@
+spring:
+  profiles.active: prod
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: admin
+    password: admin
+  jms:
+    listener:
+      acknowledge-mode: dups-ok
+      
+elastic:
+    url: localhost:9200
+
+server:
+  port : 8081
+
+logging:
+  level:
+    root: INFO
+    org.springframework.data.convert.CustomConversions: ERROR
+    
+backend:
+  events:
+    virtual:
+       topic: Consumer.ecxconsole.VirtualTopic.ecx.events       
+       
+---
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:oracle:thin:@db-ecxdev.exelaonline.com:1521/ecxdev
+    driver: oracle.jdbc.driver.OracleDriver
+    username: ecx
+    password: ecx2developer
+    hikari:
+      maximum-pool-size: 10
+---
+spring:
+  profiles: qa
+  datasource:
+    url: jdbc:oracle:thin:@db-ecxqa1.exelaonline.com:1521/ecxqa1
+    driver: oracle.jdbc.driver.OracleDriver
+    username: ECX_APP
+    password: Ecxappq1
+    hikari:
+      maximum-pool-size: 10
+---
+spring:
+  profiles: uat
+  datasource:
+    url: jdbc:oracle:thin:@db-ecxuat.exelaonline.com:1521/ecxuat
+    driver: oracle.jdbc.driver.OracleDriver
+    username: ECX_APP
+    password: ecxuat4app
+    hikari:
+      maximum-pool-size: 10
+---
+spring:
+  profiles: prod
+  datasource:
+    url: jdbc:oracle:thin:@db-ecxprod.exelaonline.com:1521/ecxprod
+    driver: oracle.jdbc.driver.OracleDriver
+    username: ECX_APP
+    password: ecappx
+    hikari:
+      maximum-pool-size: 10

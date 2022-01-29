@@ -1,0 +1,82 @@
+[
+    {
+        "KeyName": "GENERAL",
+        "DpsMoveIntervalDays": "15",
+        "JobActivityInterval": "15",
+        "DpsMonitorInterval": "15",
+        "ExecutionIntervalOnSecs": "60"
+    },
+    {
+        "KeyName": "PROFTPD",
+        "Query": "search earliest=-6h@h (index=os sourcetype=proftpd* host=try-pciftp* ) (/nap11evfs90/input OR /nap11evfs90/input2 OR  /nap22evfs91/output OR /nap22evfs91/output2) AND TRANSFER_DIRECTION=i | rename LOGIN_NAME AS User | rename BYTES_TRANSFERRED AS Size  | rename XFER_SERVICE AS Method  | rename TRANSFER_FILENAME as FileName | rename _time as Time  | table User Method FileName Time Size",
+        "Url": "https://logs.regulusgroup.net:8089/services/search/jobs/",
+        "User": "ecxuser",
+        "Password": "12Remember!"
+    },
+    {
+        "KeyName": "T2APP",
+        "Query": "search earliest=-6h@h  sourcetype=\"t2_app\" ritsApplicationCode AND ( changeme ) | xmlkv | rename printJobNumber as JobNumber | rename ritsApplicationCode as AppCode | rename eventClassCode as Platform | eval  PlatformStartTime = strftime(strptime(actualStartTime, \"%Y-%m-%dT%H:%M:%S\"),\"%Y-%m-%d %H:%M:%S\") | convert timeformat=\"%Y-%m-%d %H:%M:%S\" mktime(PlatformStartTime)    | eval  Schedule = strftime(strptime(scheduledStartTime, \"%Y-%m-%dT%H:%M:%S\"),\"%Y-%m-%d %H:%M:%S\") | convert timeformat=\"%Y-%m-%d %H:%M:%S\" mktime(Schedule)  | eval FileName = details.text | convert timeformat=\"%Y-%m-%d %H:%M:%S\" mktime(PlatformStartTime)  | convert timeformat=\"%Y-%m-%d %H:%M:%S\" mktime(Schedule) | table JobNumber AppCode dpsAppCode Platform PlatformStartTime Schedule FileName",
+        "Url": "https://logs.regulusgroup.net:8089/services/search/jobs/",
+        "User": "ecxuser",
+        "Password": "12Remember!"
+    },
+    {
+        "KeyName": "PROFTPD_ELASTICSEARCH",
+        "Query": "{ \"_source\": { \"includes\": [ \"FileName\", \"Method\", \"User\", \"Time\", \"Size\", \"JobNumber\", \"AppCode\", \"Platform\", \"PlatformStartTime\", \"Schedule\" , \"DeliveredToTargetPlatform\" , \"LastMovement\",\"ElapsedTime\",\"SLA\"] }, \"query\": { \"bool\": { \"must\": { \"match_all\": {} }, \"filter\": { \"range\": { \"Time\": { \"gte\": \"changeme\" } } } } } }",
+        "Index": "dps-moveit",
+        "Type": "dps_dashboard",
+        "Url": "http://localhost:9200/dps-moveit/_search?size=9000&pretty=true&filter_path=hits.hits._source",
+        "User": "",
+        "Password": ""
+    }, {
+        "KeyName": "DPS_MONITOR_ELASTICSEARCH",
+        "Query": "{ \"query\": { \"bool\": { \"must\": { \"match_all\": {} }, \"filter\": { \"range\": { \"Time\": { \"gte\": \"changeme\" } } } } } }",
+        "Index": "dps-moveit",
+        "Type": "dps_monitor",
+        "Url": "http://localhost:9200/dps-moveit/_search?size=9000&pretty=true&filter_path=hits.hits._source",
+        "User": "",
+        "Password": ""
+    }, {
+        "KeyName": "MOVEITC",
+        "Query": "search earliest=-6h@h sourcetype=\"moveitc\" ( changeme ) | eval  FileName = _raw | eval key=md5(_raw)  | table FileName key",
+        "Url": "https://logs.regulusgroup.net:8089/services/search/jobs/",
+        "User": "ecxuser",
+        "Password": "12Remember!"
+    }, {
+        "KeyName": "SENDER_RECEIVER",
+        "Query": "search earliest=-6h@h  sourcetype=\"senderreceiver\" | rename JOBNUMBER as JobNumber | rename _time as Time   |dedup JobNumber | table Time JobNumber DeliveryStatus",
+        "Url": "https://logs.regulusgroup.net:8089/services/search/jobs/",
+        "User": "ecxuser",
+        "Password": "12Remember!"
+    }, {
+        "KeyName": "RPDS_INPUT",
+        "Query": "search earliest=-6h@h sourcetype=\"RPDSInput\" | table AppCode JobNumber InFileName",
+        "Url": "https://logs.regulusgroup.net:8089/services/search/jobs/",
+        "User": "ecxuser",
+        "Password": "12Remember!"
+    }, {
+        "KeyName": "BULK_PROFTPD",
+        "Query": "",
+        "Index": "dps-moveit",
+        "Type": "dps_dashboard",
+        "Url": "http://localhost:9200/_bulk",
+        "User": "",
+        "Password": ""
+    }, {
+        "KeyName": "BULK_MOVEITC",
+        "Query": "",
+        "Index": "dps-moveit",
+        "Type": "dps_moveit",
+        "Url": "http://localhost:9200/_bulk",
+        "User": "",
+        "Password": ""
+    }, {
+        "KeyName": "BULK_DPSMONITOR",
+        "Query": "",
+        "Index": "dps-moveit",
+        "Type": "dps_monitor",
+        "Url": "http://localhost:9200/_bulk",
+        "User": "",
+        "Password": ""
+    }
+]

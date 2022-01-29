@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecx.backend.dao.mapper.VendorConfigMapper'>
+    <resultMap type='com.exelatech.ecx.backend.model.VendorConfig' id='VendorConfigResult'>
+        <result property='vendorCode' column='VC_VENDOR_CODE'/>
+        <result property='checkHoliday' column='VC_CHECK_HOLIDAY' javaType='boolean' typeHandler="org.apache.ibatis.type.BooleanTypeHandler"/>
+        <result property='holidayName' column='HOLIDAY_NAME'/>
+    </resultMap>
+
+    <select id="getVendorHoliday" parameterType="map" resultMap="VendorConfigResult">
+        SELECT VC.VC_VENDOR_CODE, decode(VC.VC_CHECK_HOLIDAY,'Y',1,0) AS VC_CHECK_HOLIDAY,
+        (SELECT HOLIDAY_NAME FROM ECX.FEDERAL_HOLIDAY WHERE HOLIDAY_DATE=to_date(${holidayDate},'YYYYMMDD')
+        ) HOLIDAY_NAME
+        FROM ECX.VENDOR_CONFIG VC
+        WHERE VC.VC_VENDOR_CODE = #{vendorCode}
+    </select>
+    <select id="getAllVendorHoliday" parameterType="map" resultMap="VendorConfigResult">
+        SELECT VC.VC_VENDOR_CODE, decode(VC.VC_CHECK_HOLIDAY,'Y',1,0) AS VC_CHECK_HOLIDAY,
+        (SELECT HOLIDAY_NAME FROM ECX.FEDERAL_HOLIDAY WHERE HOLIDAY_DATE=to_date(${holidayDate},'YYYYMMDD')
+        ) HOLIDAY_NAME
+        FROM ECX.VENDOR_CONFIG VC
+    </select>
+    <select id="getHoliday" parameterType="map" resultMap="VendorConfigResult">
+        SELECT FH.HOLIDAY_NAME
+        FROM ECX.FEDERAL_HOLIDAY FH
+        WHERE FH.HOLIDAY_DATE=to_date(${holidayDate},'YYYYMMDD')
+    </select>
+
+</mapper>

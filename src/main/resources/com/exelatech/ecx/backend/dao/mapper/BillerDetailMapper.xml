@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecx.backend.dao.mapper.BillerDetailMapper'>
+    <resultMap type='com.exelatech.ecx.backend.model.BillerDetail' id='BillerDetailResult'>
+        <result property='billerName' column='BC_BILLER_NAME'/>
+        <result property='clientCode' column='CLIENT_CODE'/>
+        <result property='clientLobCode' column='CLIENT_LOB_CODE'/>
+        <result property='paymentCount' column='PAYMENT_COUNT'/>
+        <result property='paymentAmount' column='PAYMENT_AMOUNT'/>
+        <result property='reversalCount' column='REVERSAL_COUNT'/>
+        <result property='reversalAmount' column='REVERSAL_AMOUNT'/>
+        <result property='netSettledAmount' column='NET_SETTLED_AMOUNT'/>
+        <result property='delivery' column='BC_DELIVERY'/>
+        <result property='billerCode' column='BC_BILLER_CODE'/>
+    </resultMap>
+
+    <!-- <select id="getBillerDetails" parameterType="map" resultMap="BillerDetailResult">
+        SELECT
+        bc.BC_BILLER_NAME,
+        es.CLIENT_CODE,
+        es.CLIENT_LOB_CODE,
+        sum(decode(es.FIELD_TYPE,'PMT_CNT',es.FIELD_VALUE,0)) as PAYMENT_COUNT,
+        sum(decode(es.FIELD_TYPE,'PMT_AMT',es.FIELD_VALUE,0)) as PAYMENT_AMOUNT,
+        sum(decode(es.FIELD_TYPE,'REV_CNT',es.FIELD_VALUE,0)) as REVERSAL_COUNT,
+        sum(decode(es.FIELD_TYPE,'REV_AMT',es.FIELD_VALUE,0)) as REVERSAL_AMOUNT,
+        sum(decode(es.FIELD_TYPE,'PMT_AMT',es.FIELD_VALUE,0)) - sum(decode(es.FIELD_TYPE,'REV_AMT',es.FIELD_VALUE,0)) as NET_SETTLED_AMOUNT
+        FROM
+        ECX.ECX_STATISTICS es, ECX.BILLER_CONFIG bc
+        where es.CLIENT_CODE=bc.CLIENT_CODE
+        and es.CLIENT_LOB_CODE=bc.CLIENT_LOB_CODE
+        and es.REFERENCE=#{feedDocID}
+        and es.CLIENT_CODE=#{clientCode}
+        and es.CLIENT_LOB_CODE=#{clientLobCode}
+        GROUP BY
+        bc.BC_BILLER_NAME,
+        es.CLIENT_CODE,
+        es.CLIENT_LOB_CODE
+    </select> -->
+    
+    <select id="getBillerDetails" parameterType="map" resultMap="BillerDetailResult">
+    SELECT
+    TO_CHAR(bc.bc_biller_name) as bc_biller_name,
+    ft.client_code,
+    ft.client_lob_code,
+    COUNT(1) payment_count,
+    SUM(ft.payment_amt) AS payment_amount,
+    0 AS reversal_count,
+    0 as reversal_amount,
+    SUM(ft.payment_amt) AS net_settled_amount
+	from
+    ecx.fis_transactions   ft,
+    ecx.biller_config      bc
+	WHERE
+    ft.client_code = bc.client_code
+    AND ft.client_lob_code = bc.client_lob_code
+    AND ft.feed_doc_id = #{feedDocID}
+    and ft.CLIENT_CODE=#{clientCode}
+    and ft.CLIENT_LOB_CODE=#{clientLobCode}
+	GROUP BY
+    GROUPING SETS (
+        (bc_biller_name,
+          ft.client_code,
+          ft.client_lob_code )
+    )
+   
+	union
+   
+	SELECT
+    TO_CHAR(bc.bc_biller_name) as bc_biller_name,
+    t.client_code,
+    t.client_lob_code,
+    SUM(DECODE(t.trans_type_code, 'PMT', 1, 0)) payment_count,
+    SUM(DECODE(t.trans_type_code, 'PMT', t.trans_amount,0)) AS payment_amount,
+    SUM(DECODE(t.trans_type_code, 'PMT', 0, 1)) AS reversal_count,
+    SUM(DECODE(t.trans_type_code, 'PMT', 0, t.trans_amount)) AS reversal_amount,
+    SUM(DECODE(t.trans_type_code, 'PMT', t.trans_amount,-1 * t.trans_amount)) AS net_settled_amount
+	FROM
+    ecx.transactions    t,
+    ecx.biller_config   bc
+	WHERE
+    t.client_code = bc.client_code
+    AND t.client_lob_code = bc.client_lob_code
+    AND t.feed_doc_id = #{feedDocID}
+    and t.CLIENT_CODE=#{clientCode}
+    and t.CLIENT_LOB_CODE=#{clientLobCode}
+	GROUP BY
+    GROUPING SETS (
+        ( bc_biller_name,
+          t.client_code,
+          t.client_lob_code )
+    )
+   
+    union
+       
+    SELECT
+    TO_CHAR(rtb.biller_name) as bc_biller_name,
+    rtb.client_code,
+    rtb.client_lob_code,
+    SUM(decode(rtb.entry_description, 'RPS PAYMNT', 1, 0)) as payment_count,
+    SUM(decode(rtb.entry_description, 'RPS PAYMNT', rt.amount, 0))/100 AS payment_amount,
+    SUM(decode(rtb.entry_description, 'REVERSAL  ', 1, 0)) AS reversal_count,
+    SUM(decode(rtb.entry_description, 'REVERSAL  ', rt.amount, 0))/100 AS reversal_amount,
+    SUM(decode(rtb.entry_description, 'RPS PAYMNT', rt.amount, -1 * rt.amount))/100 AS net_settled_amount
+	FROM
+    ECX.rpps_transaction_batches rtb,
+    ECX.rpps_transactions rt
+	WHERE
+    rtb.feed_doc_id = rt.feed_doc_id
+    and rtb.client_code = rt.client_code
+    and rtb.client_lob_code = rt.client_lob_code
+    AND rtb.batch_number = rt.batch_number
+    AND rt.feed_doc_id=#{feedDocID}
+    and rt.CLIENT_CODE=#{clientCode}
+    and rt.CLIENT_LOB_CODE=#{clientLobCode}
+	GROUP BY
+    GROUPING SETS (
+        ( rtb.biller_name,
+          rtb.client_code,
+          rtb.client_lob_code )
+    )ORDER BY 1
+    </select>
+    
+    <select id="getBillerDelivery" resultMap="BillerDetailResult">
+        SELECT
+        bc.BC_DELIVERY        
+        FROM ECX.BILLER_CONFIG bc
+        where bc.CLIENT_CODE=#{clientCode}
+        and bc.CLIENT_LOB_CODE=#{clientLobCode}
+    </select>
+       <select id="getBillerDeliveryDetails" resultMap="BillerDetailResult">
+        SELECT
+        bc.CLIENT_CODE,
+        bc.CLIENT_LOB_CODE,
+        bc.BC_DELIVERY,
+        bc. BC_BILLER_CODE       
+        FROM ECX.BILLER_CONFIG bc
+        where bc.CLIENT_CODE=#{clientCode}
+        and bc.CLIENT_LOB_CODE=#{clientLobCode}
+        
+    </select>
+    <select id="getProcessedBillerDetails" resultMap="BillerDetailResult">
+        SELECT DISTINCT
+        bc.CLIENT_CODE,
+        bc.CLIENT_LOB_CODE,
+        bc.BC_DELIVERY,
+        bc. BC_BILLER_CODE       
+        FROM ECX.BILLER_CONFIG bc,ECX.ECX_STATISTICS es
+        where es.CLIENT_CODE=bc.CLIENT_CODE
+        and es.CLIENT_LOB_CODE=bc.CLIENT_LOB_CODE
+        and es.REFERENCE=#{feedDocID}
+        and bc.BC_BILLER_CODE=#{billerCode}
+    </select>
+    <select id="getExportStatus" resultType="int">
+        select count(*) from ECX.${tableName} where OUT_FILE_NAME is null 
+        and FEED_DOC_ID = #{feedDocId}
+    </select>
+    <select id="getBillerExportStatus" resultType="int">
+        select count(*) from ECX.${tableName} where OUT_FILE_NAME is null 
+        and FEED_DOC_ID = #{feedDocId}
+        and CLIENT_CODE = #{clientCode}
+        and CLIENT_LOB_CODE = #{clientLobCode}
+    </select>
+</mapper>

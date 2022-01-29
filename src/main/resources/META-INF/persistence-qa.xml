@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+  <persistence-unit name="ecx" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <class> com.exelatech.ecx.backend.dao.EcxLookup</class>
+    <properties>
+      <property name="javax.persistence.jdbc.url" value="jdbc:oracle:thin:@db-ecxqa1.exelaonline.com:1521/ecxqa1" />
+      <property name="javax.persistence.jdbc.user" value="ECX_APP" />
+      <property name="javax.persistence.jdbc.password" value="Ecxappq1" />
+      <property name="javax.persistence.jdbc.driver" value="oracle.jdbc.OracleDriver" />
+      <property name="hibernate.dialect" value="org.hibernate.dialect.Oracle8iDialect" />
+    </properties>
+  </persistence-unit>
+
+  <persistence-unit name="ecx_monitor" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <class> com.exelatech.ecx.backend.dao.DpsJob</class>
+    <class> com.exelatech.ecx.backend.dao.DpsJobStatus</class>
+    <properties>
+      <property name="javax.persistence.jdbc.url" value="jdbc:oracle:thin:@db-dps-prod:1525/dps2prod" />
+      <property name="javax.persistence.jdbc.user" value="ecx_monitor" />
+      <property name="javax.persistence.jdbc.password" value="ecx2monitorp" />
+      <property name="javax.persistence.jdbc.driver" value="oracle.jdbc.OracleDriver" />
+      <property name="hibernate.dialect" value="org.hibernate.dialect.Oracle8iDialect" />
+    </properties>
+  </persistence-unit>
+  <persistence-unit name="job_activity" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <class> com.exelatech.ecx.backend.dao.Prisma</class>
+    <properties>
+      <property name="javax.persistence.jdbc.url" value="jdbc:sqlserver://10.1.5.53\\P034:2001;databaseName=JobActivitySQL" />
+      <property name="javax.persistence.jdbc.user" value="ECXUser" />
+      <property name="javax.persistence.jdbc.password" value="T;&amp;UsUbG2?Nm" />
+      <property name="javax.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
+      <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect" />
+      <property name="hibernate.format_sql" value="true" />
+    </properties>
+  </persistence-unit>
+</persistence>

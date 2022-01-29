@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecx.backend.dao.mapper.ExpectedDatafeedMapper'>
+    <resultMap type='com.exelatech.ecx.backend.model.ExpectedDatafeed' id='ExpectedDatafeedResult'>
+        <id property='feedID' column='FEED_ID'/>
+        <result property='feedName' column='FEED_NAME'/>
+        <result property='vendorCode' column='VENDOR_CODE'/>
+        <result property='filePattern' column='FILE_PATTERN'/>
+        <result property='fileType' column='FILE_TYPE'/>
+        <result property='expectedTime' column='EXPECTED_TIME'/>
+        <result property='fileSchedule' column='FILE_SCHEDULE'/>
+        <result property='singleMulti' column='SINGLE_MULTI'/>
+        <result property='gracePeriod' column='GRACE_PERIOD'/>
+    </resultMap>
+
+    <select id="search" resultMap="ExpectedDatafeedResult">
+        SELECT edf.*
+        FROM ECX.EXPECTED_DATAFEED edf
+        WHERE upper(edf.FEED_NAME) LIKE upper(#{searchTerm})
+        OR upper(edf.VENDOR_CODE) LIKE upper(#{searchTerm})
+        OR upper(edf.FILE_PATTERN) LIKE upper(#{searchTerm})
+        OR upper(edf.FILE_TYPE) LIKE upper(#{searchTerm})
+        ORDER BY edf.FEED_ID
+    </select>
+
+    <select id="get" resultMap="ExpectedDatafeedResult">
+        SELECT edf.*
+        FROM ECX.EXPECTED_DATAFEED edf
+        WHERE edf.FEED_ID = #{feedID}
+        ORDER BY edf.FEED_ID
+    </select>
+
+    <select id="getAll" resultMap="ExpectedDatafeedResult">
+        SELECT edf.*
+        FROM ECX.EXPECTED_DATAFEED edf
+        ORDER BY edf.FEED_ID
+    </select>
+
+    <select id="exists" resultMap="ExpectedDatafeedResult">
+        SELECT count(1) as count
+        from ECX.EXPECTED_DATAFEED
+        WHERE FEED_ID = #{feedID}
+    </select>
+
+    <insert id="insert" parameterType="com.exelatech.ecx.backend.model.ExpectedDatafeed">
+        INSERT
+        INTO ECX.EXPECTED_DATAFEED
+            (
+                FEED_ID,
+                FEED_NAME,
+                VENDOR_CODE,
+                FILE_PATTERN,
+                FILE_TYPE,
+                EXPECTED_TIME,
+                FILE_SCHEDULE,
+                SINGLE_MULTI,
+                GRACE_PERIOD
+            )
+            VALUES
+            (
+                #{feedID},
+                #{feedName},
+                #{vendorCode},
+                #{filePattern},
+                #{fileType},
+                #{expectedTime},
+                #{fileSchedule},
+                #{singleMulti},
+                #{gracePeriod}
+            )
+    </insert>
+
+    <insert id="update" parameterType="com.exelatech.ecx.backend.model.ExpectedDatafeed">
+        UPDATE ECX.EXPECTED_DATAFEED
+        SET
+            FEED_NAME=#{feedName},
+            VENDOR_CODE=#{vendorCode},
+            FILE_PATTERN=#{filePattern},
+            FILE_TYPE=#{fileType},
+            EXPECTED_TIME=#{expectedTime},
+            FILE_SCHEDULE=#{fileSchedule},
+            SINGLE_MULTI=#{singleMulti},
+            GRACE_PERIOD=#{gracePeriod}
+        WHERE
+            FEED_ID=#{feedID}
+    </insert>
+
+    <delete id="remove" parameterType="com.exelatech.ecx.backend.model.ExpectedDatafeed">
+        DELETE FROM ECX.EXPECTED_DATAFEED
+        WHERE FEED_ID=#{feedID}
+    </delete>
+</mapper>

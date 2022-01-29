@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='com.exelatech.ecx.backend.dao.mapper.ReturnFeedsMapper'>
+    <resultMap type='com.exelatech.ecx.backend.model.ReturnFeeds' id='ReturnFeedsResult'>
+        <id property='feedDocID' column='ER_FEED_DOC_ID'/>
+        <result property='transactionId' column='ER_TRANSACTION_ID'/>
+         <result property='returnDate' column='ER_RETURN_DATE'/>
+        <result property='vendorCode' column='ER_VENDOR_CODE'/>
+        <result property='clientCode' column='CLIENT_CODE'/>
+        <result property='serviceClassCode' column='ER_SERVICE_CLASS'/>
+        <result property='netAmount' column='ER_NET_AMOUNT'/>
+        <result property='addendumRecord' column='ER_ADDENDNUM_RECORD'/>
+        <result property='addendumSequence' column='ER_ADDENDUM_SEQUENCE'/>
+        <result property='addendaTypeCode' column='ER_ADDENDUM_TYPE_CODE'/>
+        <result property='returnReasonCode' column='ER_RETURN_REASON_CODE'/>
+        <result property='addendaDate' column='ER_ADDENDA_DATE'/>
+        <result property='addendumInformation' column='ER_ADDENDUM_INFORMATION'/>
+        <result property='vendorRejectCode' column='ER_VENDOR_REJECT_CODE'/>
+        <result property='vendorRejectDescription' column='ER_VENDOR_REJECT_DESCRIPTION'/>
+        <result property='downStream' column='ER_DOWNSTREAM'/>
+        <result property='batchNumber' column='ER_BATCH_NUMBER'/>
+        <result property='traceNumber' column='ER_TRACE_NUMBER'/>
+        <result property='vendorStatus' column='ER_VENDOR_STATUS'/>
+        <result property='transactionCode' column='ER_TRANSACTION_CODE'/>
+        <result property='downStreamStatus' column='ER_DOWNSTREAM_STATUS'/>
+        <result property='count' column='count'/>
+        <result property='errorCount' column='errorCount'/>
+        <result property='rejectCount' column='rejectCount'/>
+        <result property='acceptedCount' column='acceptedCount'/>
+        <result property='feedDocAuthor' column='FEED_DOC_AUTHOR'/>
+        <result property='feedDocType' column='FEED_DOC_TYPE'/>
+    </resultMap>
+<!--  
+    <select id="search" resultMap="ReturnFeedsResult">
+        SELECT rF.*
+        FROM ECX.ECX_RETURNS rf
+        WHERE upper(RF.FEED_) LIKE upper(#{searchTerm})
+        OR upper(edf.VENDOR_CODE) LIKE upper(#{searchTerm})
+        OR upper(edf.FILE_PATTERN) LIKE upper(#{searchTerm})
+        OR upper(edf.FILE_TYPE) LIKE upper(#{searchTerm})
+        ORDER BY edf.FEED_ID
+    </select>-->
+
+    <select id="get" resultMap="ReturnFeedsResult">
+        SELECT rf.*
+        FROM ECX.ECX_RETURNS rf
+        WHERE rf.ER_FEED_DOC_ID = #{feedDocID}
+        ORDER BY rf.ER_FEED_DOC_ID
+    </select>
+
+    <select id="getAll" resultMap="ReturnFeedsResult">
+        SELECT rf.*
+        FROM ECX.ECX_RETURNS rf
+        ORDER BY rf.ER_FEED_DOC_ID
+    </select>
+
+    <select id="getReturnsByFeedDocID" resultMap="ReturnFeedsResult">
+        SELECT RT.client_code||'-'||RT.client_lob_code as CLIENT_CODE,ER.*
+        FROM ECX.ECX_RETURNS ER, ECX.RPPS_TRANSACTIONS RT
+        WHERE ER.ER_TRANSACTION_ID=RT.FEED_ITEM_ID
+        AND ER.ER_FEED_DOC_ID = #{feedDocID}
+        UNION
+        SELECT FT.client_code||'-'||FT.client_lob_code as CLIENT_CODE,ER.*
+        FROM ECX.ECX_RETURNS ER, ECX.FIS_TRANSACTIONS FT
+        WHERE ER.ER_TRANSACTION_ID=FT.FEED_ITEM_ID
+        AND ER.ER_FEED_DOC_ID = #{feedDocID}
+        UNION
+        SELECT T.client_code||'-'||T.client_lob_code as CLIENT_CODE,ER.*
+        FROM ecx.ECX_RETURNS ER, ecx.TRANSACTIONS T
+        WHERE ER.ER_FEED_DOC_ID = #{feedDocID}
+        AND ER.ER_TRANSACTION_ID=T.FEED_ITEM_ID
+    </select>
+
+    <select id="getVendorReturns" resultMap="ReturnFeedsResult">
+        SELECT nvl(RT.client_code,nvl(T.client_code,FT.client_code))||'-'||nvl(RT.client_lob_code,nvl(T.client_lob_code,FT.client_lob_code)) as CLIENT_CODE,ER.*
+        FROM ECX.ECX_RETURNS ER
+        LEFT OUTER JOIN ECX.RPPS_TRANSACTIONS RT ON  ER.ER_TRANSACTION_ID=RT.FEED_ITEM_ID
+        LEFT OUTER JOIN ECX.TRANSACTIONS T ON  ER.ER_TRANSACTION_ID=T.FEED_ITEM_ID
+        LEFT OUTER JOIN ECX.FIS_TRANSACTIONS FT ON  ER.ER_TRANSACTION_ID=FT.FEED_ITEM_ID
+        WHERE ER.ER_DOWNSTREAM_STATUS='SUBMITTED'
+        AND ER_VENDOR_CODE=#{vendor}
+        AND ER_TRANSACTION_ID IN ( SELECT TRANSACTIONSID FROM ECX.ECX_RETURNS_AUDIT WHERE FILEREFERENCE=#{feedDocID} )
+    </select>
+
+    <select id="getVendorReturnsByTransaction" resultMap="ReturnFeedsResult">
+        SELECT ER.*
+        FROM ECX.ECX_RETURNS ER
+        WHERE ER.ER_FEED_DOC_ID = #{feedDocID}
+        AND ER_TRANSACTION_ID=#{transactionID}
+    </select>
+
+    <select id="getCount" resultMap ="ReturnFeedsResult" >
+        SELECT count(1) as count
+        FROM ECX.ECX_RETURNS rf
+         WHERE rf.ER_FEED_DOC_ID = #{param1} and rf.ER_DOWNSTREAM_STATUS = #{param2}
+    </select>
+    
+    <select id="getRejectedRecords" resultMap ="ReturnFeedsResult" >
+        SELECT rf.ER_VENDOR_CODE,rf.ER_TRANSACTION_ID,rf.ER_ADDENDUM_INFORMATION,rf.ER_VENDOR_REJECT_DESCRIPTION,rf.ER_VENDOR_STATUS
+        FROM ECX.ECX_RETURNS rf
+         WHERE rf.ER_FEED_DOC_ID=#{param1} and rf.ER_VENDOR_STATUS='HOLD'
+    </select>
+    <select id="FetchRecords" resultMap="ReturnFeedsResult">
+        SELECT FEED_DOC_AUTHOR,FEED_DOC_TYPE 
+        FROM ECX.DATAFEED df WHERE df.FEED_DOC_ID = #{param1}
+    </select>
+    <select id="getErrorCount" resultMap="ReturnFeedsResult">
+        SELECT count(1) as errorCount
+        FROM ECX.ECX_RETURNS rf
+        WHERE rf.ER_FEED_DOC_ID = #{param1} and rf.ER_VENDOR_STATUS='HOLD'
+    </select>
+    
+    <select id="getRejectCount" resultMap ="ReturnFeedsResult" >
+        SELECT count(1) as rejectCount
+        FROM ECX.ECX_RETURNS er
+         WHERE (er.ER_VENDOR_STATUS ='HOLD' or er.ER_VENDOR_STATUS ='REJECTED') and er.ER_DOWNSTREAM_STATUS = 'SUBMITTED'
+    </select>
+    
+    <select id="getAcceptedCount" resultMap ="ReturnFeedsResult" >
+        SELECT count(1) as acceptCount
+        FROM ECX.ECX_RETURNS er
+         WHERE er.ER_VENDOR_STATUS ='ACCEPTED' and er.ER_DOWNSTREAM_STATUS = 'SUBMITTED'
+    </select>
+
+    <select id="getVendors" resultMap ="ReturnFeedsResult" >
+        SELECT listagg(ER_VENDOR_CODE, ',') WITHIN GROUP (
+        ORDER BY ER_VENDOR_CODE) ER_VENDOR_CODE
+        FROM
+        (SELECT DISTINCT ER_VENDOR_CODE
+        FROM ECX.ECX_RETURNS
+        WHERE er_feed_doc_id=#{feedDocID}
+        )
+        ORDER BY ER_VENDOR_CODE
+    </select>
+
+    <!--  WHERE rf.ER_FEED_DOC_ID = #{param1} and rf.ER_DOWNSTREAM_STATUS = #{param2}-->
+<!-- 
+    count(1) as errorCount,
+    <select id="exists" resultMap="ReturnFeedsResult">
+        SELECT count(1) as count
+        from ECX.EXPECTED_DATAFEED
+        WHERE FEED_ID = #{feedID}
+    </select>
+
+    <insert id="insert" parameterType="com.transcentra.ecx.model.ExpectedDatafeed">
+        INSERT
+        INTO ECX.EXPECTED_DATAFEED
+            (
+                FEED_ID,
+                FEED_NAME,
+                VENDOR_CODE,
+                FILE_PATTERN,
+                FILE_TYPE,
+                EXPECTED_TIME,
+                FILE_SCHEDULE,
+                SINGLE_MULTI,
+                GRACE_PERIOD
+            )
+            VALUES
+            (
+                #{feedID},
+                #{feedName},
+                #{vendorCode},
+                #{filePattern},
+                #{fileType},
+                #{expectedTime},
+                #{fileSchedule},
+                #{singleMulti},
+                #{gracePeriod}
+            )
+    </insert>
+
+    <insert id="update" parameterType="com.transcentra.ecx.model.ExpectedDatafeed">
+        UPDATE ECX.EXPECTED_DATAFEED
+        SET
+            FEED_NAME=#{feedName},
+            VENDOR_CODE=#{vendorCode},
+            FILE_PATTERN=#{filePattern},
+            FILE_TYPE=#{fileType},
+            EXPECTED_TIME=#{expectedTime},
+            FILE_SCHEDULE=#{fileSchedule},
+            SINGLE_MULTI=#{singleMulti},
+            GRACE_PERIOD=#{gracePeriod}
+        WHERE
+            FEED_ID=#{feedID}
+    </insert>
+
+    <delete id="remove" parameterType="com.transcentra.ecx.model.ExpectedDatafeed">
+        DELETE FROM ECX.EXPECTED_DATAFEED
+        WHERE FEED_ID=#{feedID}
+    </delete>  -->
+</mapper>
